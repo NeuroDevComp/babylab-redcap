@@ -1,59 +1,57 @@
 {% extends "base.html" %}
 {% block content %}
-  <header>
-    <div class="jumbotron jumbotron-fluid">
-      <div class="container">
-        <h1 class="display-4">Studies</h1>
-        <p class="lead">Showing all appointments in database.</p>
-      </div>
+<header>
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      <h1 class="display-4">Studies</h1>
+      <p class="lead">Showing all appointments in database.</p>
     </div>
-    <hr class="my-4">
-    <div class="container-fluid">
-      <form class="d-flex" role="search" method="post">
-        <div class="input-group mb-3">
-          <label class="input-group-text" for="inputStudy">Study</label>
-          <select class="form-select"
-                  id="inputStudy"
-                  name="inputStudy"
-                  onchange="this.form.submit()">
-            <option disabled {% if not selected_study %}selected{% endif %}>Select a study...</option>
-            {% for k, v in data_dict["appointment_study"].items() %}
-              <option {% if selected_study==v %}selected{% endif %} value="{{ k }}">{{ v }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </form>
+  </div>
+  <hr class="my-4">
+  <form class="form" method="post">
+    <div class="input-group">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="study-addon">Study</span>
+      </div>
+      <select class="form-select" id="inputStudy" name="inputStudy" onchange="this.form.submit()">
+        <option disabled {% if not selected_study %}selected{% endif %}>Select a study...</option>
+        {% for k, v in data_dict["appointment_study"].items() %}
+        <option {% if selected_study==v %}selected{% endif %} value="{{ k }}">{{ v }}</option>
+        {% endfor %}
+      </select>
     </div>
-  </header>
-  <body>
-    {% if selected_study %}
-      <div class="card card-plot">
-        <div class="card-header">Appointments</div>
-        <div class="card-body">
-          <canvas id="studies1" width="850" height="500">
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-            <script type="text/javascript"
-                    src="{{ url_for('static', filename='js/functions.js') }}"></script>
-            <script>
-            dateLinePlot(
-              {{ data["date_labels"] | safe }},
-              {{ data["date_values"] | safe }},
-              "studies1",
-              "#4BC0C0",
-              "Date created"
-            );
-            </script>
-          </canvas>
-        </div>
-      </div>
-      <div class="card">
-        <h5 class="card-header">Appointments: {{ selected_study }}</h5>
-        <div class="card-body">
-          <h6 class="card-subtitle mb-2 text-muted">Click IDs to see a participant's profile</h6>
-          <div width="10%">{{ data["table"]|safe }}</div>
-        </div>
-      </div>
-    {% endif %}
-  </body>
+  </form>
+</header>
+
+<body>
+  {% if selected_study %}
+  <div class="card card-plot">
+    <div class="card-header">Appointments</div>
+    <div class="card-body">
+      <canvas id="studies1" width="850" height="500">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script
+          src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='js/functions.js') }}"></script>
+        <script>
+          dateLinePlot(
+            {{ data["date_labels"] | safe }},
+            {{ data["date_values"] | safe }},
+            "studies1",
+            "#4BC0C0",
+            "Date created"
+          );
+        </script>
+      </canvas>
+    </div>
+  </div>
+  <div class="card">
+    <h5 class="card-header">Appointments: {{ selected_study }}</h5>
+    <div class="card-body">
+      <h6 class="card-subtitle mb-2 text-muted">Click IDs to see a participant's profile</h6>
+      <div width="10%">{{ data["table"]|safe }}</div>
+    </div>
+  </div>
+  {% endif %}
+</body>
 {% endblock %}
