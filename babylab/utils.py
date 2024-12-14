@@ -12,7 +12,7 @@ from babylab import models
 from babylab import calendar
 
 
-def format_df(x: DataFrame, data_dict: dict)-> DataFrame:
+def format_df(x: DataFrame, data_dict: dict) -> DataFrame:
     """Reformat dataframe.
 
     Args:
@@ -39,17 +39,17 @@ def format_df(x: DataFrame, data_dict: dict)-> DataFrame:
                 ]
             if "taxi_isbooked" in col_name:
                 for idx, (a, i) in enumerate(zip(x["taxi_address"], x[col_name])):
-                    if a and i=="1":
+                    if a and i == "1":
                         x[col_name][idx] = "<p style='color: green;'>Yes</p>"
-                    if a and i=="0":
+                    if a and i == "0":
                         x[col_name][idx] = "<p style='color: red;'>No</p>"
                     if not a:
                         x[col_name][idx] = ""
 
-
     return x
 
-def format_dict(x: dict, data_dict = dict) -> dict:
+
+def format_dict(x: dict, data_dict=dict) -> dict:
     """Reformat dictionary.
 
     Args:
@@ -59,13 +59,16 @@ def format_dict(x: dict, data_dict = dict) -> dict:
     Returns:
         dict: A reformatted dictionary.
     """
-    for k, v in x.items():
-        kdict = "language_" + k
-        if kdict in data_dict and v:
-            x[k] = data_dict[kdict][v]
-        if "exp" in k:
-            x[k] = "" if v == 0 else round(float(v) * 100, None)
+    fields = ["participant_", "appointment_", "language_"]
+    for f in fields:
+        for k, v in x.items():
+            kdict = f + k
+            if kdict in data_dict and v:
+                x[k] = data_dict[kdict][v]
+            if "exp" in k:
+                x[k] = "" if v == 0 else round(float(v) * 100, None)
     return x
+
 
 def replace_labels(x: DataFrame | dict, data_dict: dict) -> DataFrame:
     """Replace field values with labels.
@@ -102,7 +105,7 @@ def get_participants_table(
         "sex",
         "comments",
         "date_created",
-        "date_updated"
+        "date_updated",
     ]
     if not records.participants.records:
         return DataFrame([], columns=cols)
@@ -139,7 +142,11 @@ def get_appointments_table(
     Returns:
         pd.DataFrame: Table of appointments.
     """
-    apts = records.participants.records[ppt_id].appointments if ppt_id else records.appointments
+    apts = (
+        records.participants.records[ppt_id].appointments
+        if ppt_id
+        else records.appointments
+    )
 
     if study:
         apts.records = {
@@ -198,7 +205,6 @@ def get_appointments_table(
     df["age_apt_months"] = new_age_apt_months
     df["age_apt_days"] = new_age_apt_days
 
-
     df = replace_labels(df, data_dict)
     return df
 
@@ -236,8 +242,11 @@ def get_questionnaires_table(
     df = quest.to_df()
     df = replace_labels(df, data_dict)
     df["isestimated"] = [
-        "<p style='color: red;'>Estimated</p>" 
-        if i=="1" else "<p style='color: green;'>Calculated</p>"
+        (
+            "<p style='color: red;'>Estimated</p>"
+            if i == "1"
+            else "<p style='color: green;'>Calculated</p>"
+        )
         for i in df["isestimated"]
     ]
     return df
@@ -320,7 +329,7 @@ def prepare_participants(records: models.Records = None, data_dict: dict = None)
     df.index = df.index.astype(int)
     df = df.sort_index(ascending=False)
     df["modify_button"] = [
-        f'<a href="/participants/{p}/participant_modify"><button type="button" class="btn btn-warning">Modify</button></a>' # pylint: disable=line-too-long
+        f'<a href="/participants/{p}/participant_modify"><button type="button" class="btn btn-warning">Modify</button></a>'  # pylint: disable=line-too-long
         for p in df.index
     ]
     df = df[
@@ -333,7 +342,7 @@ def prepare_participants(records: models.Records = None, data_dict: dict = None)
             "comments",
             "date_created",
             "date_updated",
-            "modify_button"
+            "modify_button",
         ]
     ]
     df = df.rename(
@@ -346,7 +355,7 @@ def prepare_participants(records: models.Records = None, data_dict: dict = None)
             "comments": "Comments",
             "date_created": "Added on",
             "date_updated": "Last updated",
-            "modify_button": ""
+            "modify_button": "",
         }
     )
     return {
@@ -483,7 +492,7 @@ def prepare_appointments(
     classes = "table table-hover table-responsive"
     df["record_id"] = [f"<a href=/participants/{i}>{i}</a>" for i in df.index]
     df["modify_button"] = [
-        f'<a href="/participants/{p}/{a}/appointment_modify"><button type="button" class="btn btn-warning">Modify</button></a>' # pylint: disable=line-too-long
+        f'<a href="/participants/{p}/{a}/appointment_modify"><button type="button" class="btn btn-warning">Modify</button></a>'  # pylint: disable=line-too-long
         for p, a in zip(df.index, df["appointment_id"])
     ]
     df["appointment_id"] = [
@@ -494,10 +503,11 @@ def prepare_appointments(
         "Confirmed": "orange",
         "Successful": "green",
         "Cancelled - Drop": "grey",
-        "Cancelled - Reschedule": "red"
+        "Cancelled - Reschedule": "red",
     }
-    df["status"] = [f"<p style='color: {status_color_map[s]};'>{s}</p>" for s in df["status"]]
-
+    df["status"] = [
+        f"<p style='color: {status_color_map[s]};'>{s}</p>" for s in df["status"]
+    ]
 
     df = df[
         [
@@ -511,10 +521,10 @@ def prepare_appointments(
             "taxi_address",
             "taxi_isbooked",
             "comments",
-            "modify_button"
+            "modify_button",
         ]
     ]
-    df = df.sort_values("date", ascending=False)
+    df = df.sort_values("date_updated", ascending=False)
 
     df = df.rename(
         columns={
@@ -548,7 +558,7 @@ def prepare_questionnaires(records: models.Records = None, data_dict: dict = Non
     df = get_questionnaires_table(records, data_dict=data_dict)
     classes = "table table-hover"
     df["modify_button"] = [
-        f'<a href="/participants/{p}/questionnaires/{q}/questionnaire_modify"><button type="button" class="btn btn-warning">Modify</button></a>' # pylint: disable=line-too-long
+        f'<a href="/participants/{p}/questionnaires/{q}/questionnaire_modify"><button type="button" class="btn btn-warning">Modify</button></a>'  # pylint: disable=line-too-long
         for p, q in zip(df.index, df["questionnaire_id"])
     ]
     df["questionnaire_id"] = [
@@ -571,7 +581,7 @@ def prepare_questionnaires(records: models.Records = None, data_dict: dict = Non
             "lang4_exp",
             "date_updated",
             "date_created",
-            "modify_button"
+            "modify_button",
         ]
     ]
     df = df.sort_values("date_created", ascending=False)

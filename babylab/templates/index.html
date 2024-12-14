@@ -2,44 +2,50 @@
 {% block header %}
 {% endblock header %}
 {% block content %}
-  <body background="{{ url_for('static',filename='sjd.png') }}">
-    <div class="row">
-      <div class="col">
-        <div class="card" id="indexCardMain">
-          <div class="card-body">
-            <h2>Welcome!</h2>
-            <hr>
-            This is the SJD Babylab database. It provides an interface with the REDCap database
-            to consult participant and appointment information conveniently. This is a work in progress, feel free to
-            report issues and provide feed-back (<a href=" mailto:gonzalo.garcia@sjd.es">gonzalo.garcia@sjd.es</a>).
-          </div>
+
+<body background="{{ url_for('static',filename='sjd.png') }}">
+  <div class="row">
+    <div class="col">
+      <div class="card" id="indexCardMain">
+        <div class="card-body">
+          <h2>Welcome!</h2>
+          <hr>
+          This is the SJD Babylab database. It provides an interface with the REDCap database
+          to consult participant and appointment information conveniently. This is a work in progress, feel free to
+          report issues and provide feed-back (<a href=" mailto:gonzalo.garcia@sjd.es">gonzalo.garcia@sjd.es</a>).
         </div>
-        <img src="{{ url_for('static', filename='ndc-logo.svg') }}"
-             id="img-ndc-logo"
-             width="--"
-             height="--"
-             alt="NDC logo">
       </div>
-      <div class="col">
-        {% if not redcap_version %}
-          <div class="alert alert-light" role="alert" id="indexCardLogin">
-            <h4 class="alert-heading">Log in</h4>
-            <p>Please, provide your API token to access the database:</p>
-            <form class="form" method="post" action='{{ url_for("index") }}'>
-              <div class="form-group">
-                <input type="password"
-                       class="form-control"
-                       id="apiToken"
-                       name="apiToken"
-                       placeholder="API token">
-                <button type="submit" class="btn btn-primary">Submit</button>
-              </div>
-            </form>
-            <hr>
-            <p class="mb-0">You can find yor API token at REDCap.</p>
-          </div>
-        {% endif %}
-      </div>
+      <img src="{{ url_for('static', filename='ndc-logo.svg') }}" id="img-ndc-logo" width="--" height="--"
+        alt="NDC logo">
     </div>
-  </body>
+    <div class="col">
+      {% if not redcap_version %}
+      <div class="alert alert-light" role="alert" id="indexCardLogin">
+        <h4 class="alert-heading">Log in</h4>
+        <p>Please, provide your API token to access the database:</p>
+        <form class="form" method="post" action='{{ url_for("index") }}'>
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="token-addon">API Token</span>
+            </div>
+            <input type="password" class="form-control" id="apiToken" name="apiToken" aria-describedby="token-addon"
+              placeholder="someverylongstringofcharacters">
+          </div>
+          <br>
+          <div class="input-group">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="email-addon">E-mail</span>
+            </div>
+            <input type="email" class="form-control" id="email" name="email" placeholder="some@email.com"
+              aria-describedby="email-addon">
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        <hr>
+        <p class="mb-0">You can find yor API token at REDCap.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</body>
 {% endblock content %}

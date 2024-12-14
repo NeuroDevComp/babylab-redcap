@@ -170,7 +170,8 @@ i {
     background-color: white;
 }
 
-.card-info, .card-input {
+.card-info,
+.card-input {
     float: left;
     width: 30%;
     margin: 1em;
@@ -185,8 +186,8 @@ i {
 
 
 td {
-    vertical-align: text-bottom; 
-  }
+    vertical-align: text-bottom;
+}
 
 .nav-link {
     font-family: "Ciutadella Regular";
@@ -201,6 +202,10 @@ td {
     font-family: "Ciutadella Regular";
     color: rgb(115, 115, 115);
     margin-left: 0.5em;
+}
+
+.input-group-text {
+    background-color: lightgrey;
 }
 
 .option {
