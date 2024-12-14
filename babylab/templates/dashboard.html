@@ -2,66 +2,45 @@
 {% block head %}
 {% endblock head %}
 {% block body %}
-  {% block content %}
-    <header>
-      <div class="jumbotron jumbotron-fluid">
-        <div class="container">
-          <h1 class="display-4">Dashboard</h1>
-          <p class="lead">Showing the current status of the project.</p>
-        </div>
-      </div>
-      <hr class="my-4" />
-    </header>
-    <body>
-      <content>
-        <ul class="nav nav-tabs mb-3 justify-content-center"
-            id="pills-tab"
-            role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active"
-                    id="pills-participants-tab"
-                    data-bs-toggle="pill"
-                    data-bs-target="#pills-participants"
-                    type="button"
-                    role="tab"
-                    aria-controls="pills-participants"
-                    aria-selected="true">Participants</button>
-          </li>
-          <li class="nav-item" role="appointments">
-            <button class="nav-link"
-                    id="pills-appointments-tab"
-                    data-bs-toggle="pill"
-                    data-bs-target="#pills-appointments"
-                    type="button"
-                    role="tab"
-                    aria-controls="pills-appointments"
-                    aria-selected="false">Appointments</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link"
-                    id="pills-questionnaires-tab"
-                    data-bs-toggle="pill"
-                    data-bs-target="#pills-questionnaires"
-                    type="button"
-                    role="tab"
-                    aria-controls="pills-questionnaires"
-                    aria-selected="false">Questionnaires</button>
-          </li>
-        </ul>
-        <div class="tab-content" id="pills-tabContent">
-          <div class="tab-pane fade show active"
-               id="pills-participants"
-               role="tabpanel"
-               aria-labelledby="pills-participants-tab"
-               tabindex="0">
-            <div class="card card-plot">
-              <div class="card-header">Age distribution</div>
-              <div class="card-body">
-                <canvas id="ageDist">
-                  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                  <script type="text/javascript"
-                          src="{{ url_for('static', filename='js/functions.js') }}"></script>
-                  <script>
+{% block content %}
+<header>
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      <h1 class="display-4">Dashboard</h1>
+      <p class="lead">Showing the current status of the project.</p>
+    </div>
+  </div>
+  <hr class="my-4" />
+</header>
+
+<body>
+  <content>
+    <ul class="nav nav-tabs mb-3 justify-content-center" id="pills-tab" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pills-participants-tab" data-bs-toggle="pill"
+          data-bs-target="#pills-participants" type="button" role="tab" aria-controls="pills-participants"
+          aria-selected="true">Participants</button>
+      </li>
+      <li class="nav-item" role="appointments">
+        <button class="nav-link" id="pills-appointments-tab" data-bs-toggle="pill" data-bs-target="#pills-appointments"
+          type="button" role="tab" aria-controls="pills-appointments" aria-selected="false">Appointments</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="pills-questionnaires-tab" data-bs-toggle="pill"
+          data-bs-target="#pills-questionnaires" type="button" role="tab" aria-controls="pills-questionnaires"
+          aria-selected="false">Questionnaires</button>
+      </li>
+    </ul>
+    <div class="tab-content" id="pills-tabContent">
+      <div class="tab-pane fade show active" id="pills-participants" role="tabpanel"
+        aria-labelledby="pills-participants-tab" tabindex="0">
+        <div class="card card-plot">
+          <div class="card-header">Age distribution</div>
+          <div class="card-body">
+            <canvas id="ageDist">
+              <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+              <script type="text/javascript" src="{{ url_for('static', filename='js/functions.js') }}"></script>
+              <script>
                 colPlot(
                   {{ data["age_dist_labels"] | safe }},
                   {{ data["age_dist_values"] | safe }},
@@ -69,15 +48,15 @@
                   "#ff6384",
                   "Age (months:days)"
                 );
-                  </script>
-                </canvas>
-              </div>
-            </div>
-            <div class="card card-plot">
-              <div class="card-header">Sex distribution</div>
-              <div class="card-body">
-                <canvas id="sexDist">
-                  <script>
+              </script>
+            </canvas>
+          </div>
+        </div>
+        <div class="card card-plot">
+          <div class="card-header">Sex distribution</div>
+          <div class="card-body">
+            <canvas id="sexDist">
+              <script>
                 circlePlot(
                   {{ data["sex_dist_labels"] | safe }},
                   {{ data["sex_dist_values"] | safe }},
@@ -91,16 +70,17 @@
                   ],
                   "Sex"
                 );
-                  </script>
-                </canvas>
-              </div>
-            </div>
-            <div class="card card-plot">
-              <div class="card-header">Participant influx</div>
-              <div class="card-body">
-                <canvas id="influx" width="800" height="450">
-                  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-                  <script>
+              </script>
+            </canvas>
+          </div>
+        </div>
+        <div class="card card-plot">
+          <div class="card-header">Participant influx</div>
+          <div class="card-body">
+            <canvas id="influx" width="800" height="450">
+              <script
+                src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+              <script>
                 dateLinePlot(
                   {{ data["ppts_date_created_labels"] | safe }},
                   {{ data["ppts_date_created_values"] | safe }},
@@ -108,43 +88,37 @@
                   "#1E90FF",
                   "Date added"
                 );
-                  </script>
-                </canvas>
-              </div>
-            </div>
+              </script>
+            </canvas>
           </div>
-          <div class="tab-pane fade show"
-               id="pills-appointments"
-               role="tabpanel"
-               aria-labelledby="pills-appointments-tab"
-               tabindex="1">
-            <div class="card card-plot">
-              <div class="card-header">Appointments made</div>
-              <div class="card-body">
-                <canvas id="appointments" width="500" height="350">
-                  <script>
+        </div>
+      </div>
+      <div class="tab-pane fade show" id="pills-appointments" role="tabpanel" aria-labelledby="pills-appointments-tab"
+        tabindex="1">
+        <div class="card card-plot">
+          <div class="card-header">Appointments made</div>
+          <div class="card-body">
+            <canvas id="appointments" width="500" height="350">
+              <script>
                 dateLinePlot(
-                  {{ data["appt_date_created_labels"] | safe }},
-                  {{ data["appt_date_created_values"] | safe }},
+                  {{ data["apts_date_created_labels"] | safe }},
+                  {{ data["apts_date_created_values"] | safe }},
                   "appointments",
                   "#4BC0C0",
                   "Date created"
                 );
-                  </script>
-                </canvas>
-              </div>
-            </div>
+              </script>
+            </canvas>
           </div>
-          <div class="tab-pane fade show"
-               id="pills-questionnaires"
-               role="tabpanel"
-               aria-labelledby="pills-questionnaires-tab"
-               tabindex="2">
-            <div class="card card-plot">
-              <div class="card-header">First language distribution</div>
-              <div class="card-body">
-                <canvas id="l1Dist" width="800px" height="400px">
-                  <script>
+        </div>
+      </div>
+      <div class="tab-pane fade show" id="pills-questionnaires" role="tabpanel"
+        aria-labelledby="pills-questionnaires-tab" tabindex="2">
+        <div class="card card-plot">
+          <div class="card-header">First language distribution</div>
+          <div class="card-body">
+            <canvas id="l1Dist" width="800px" height="400px">
+              <script>
                 colPlot(
                   {{ data["lang1_dist_labels"] | safe }},
                   {{ data["lang1_dist_values"] | safe }},
@@ -152,15 +126,15 @@
                   'rgba(255, 205, 86, 1)',
                   "First language"
                 );
-                  </script>
-                </canvas>
-              </div>
-            </div>
-            <div class="card card-plot">
-              <div class="card-header">Second language distribution</div>
-              <div class="card-body">
-                <canvas id="l2Dist" width="800px" height="400px">
-                  <script>
+              </script>
+            </canvas>
+          </div>
+        </div>
+        <div class="card card-plot">
+          <div class="card-header">Second language distribution</div>
+          <div class="card-body">
+            <canvas id="l2Dist" width="800px" height="400px">
+              <script>
                 colPlot(
                   {{ data["lang2_dist_labels"] | safe }},
                   {{ data["lang2_dist_values"] | safe }},
@@ -168,13 +142,13 @@
                   "#4BC0C0",
                   "Second language"
                 )
-                  </script>
-                </canvas>
-              </div>
-            </div>
+              </script>
+            </canvas>
           </div>
         </div>
-      </content>
-    </body>
-  {% endblock content %}
+      </div>
+    </div>
+  </content>
+</body>
+{% endblock content %}
 {% endblock body %}
