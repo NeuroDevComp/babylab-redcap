@@ -1,223 +1,224 @@
 {% extends "base.html" %}
 {% block content %}
-  <header>
-    <div class="jumbotron jumbotron-fluid">
-      <div class="container">
-        <h1 class="display-4">Participants</h1>
-        <p class="lead">Showing all participants in database.</p>
-      </div>
-    </div>
-    <hr class="my-4">
-  </header>
-  <body>
-    <a href="{{ url_for('participant_new') }}">
-      <button type="button" class="btn btn-success">
-        <i class="fa fa-plus"></i>&nbsp;&nbsp;New
-        participant
-      </button>
-    </a>
-    {% if data_ppt and ppt_id!="-- Select one --" %}
-      <a href="{{ url_for('participant_modify', ppt_id = ppt_id) }}">
-        <button type="button" class="btn btn-warning">
-          <i class="fa fa-pen"></i>&nbsp;&nbsp;Modify participant
-        </button>
-      </a>
-      <a href="{{ url_for('questionnaire_new', ppt_id = ppt_id) }}">
-        <button type="button" class="btn btn-primary">
-          <i class="fa fa-clipboard"></i>&nbsp;&nbsp;Add questionnaire
-        </button>
-      </a>
-    {% endif %}
-    <form class="d-flex" role="search" method="post">
-      <div class="input-group mb-3 col-3">
-        <label class="input-group-text" for="inputPptId">Participant ID</label>
-        <select class="form-select col-1"
-                id="inputPptId"
-                name="inputPptId"
-                onchange="this.form.submit()">
-          <option selected>-- Select one --</option>
-          {% for p in ppt_options %}
-            <option {% if ppt_id==p %}selected{% endif %}>{{ p }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </form>
-    {% if data_ppt and ppt_id!="-- Select one --" %}
-      <div clas="row">
-        <h2>
-          Participant ID: <a href="{{ url_for('participants', ppt_id=ppt_id) }}">{{ ppt_id }}</a>
-        </h2>
-      </div>
-      <br>
-      <div class="card card-info">
-        <div class="card-header">Participant information</div>
-        <div class="card-body">
-          <table class="table table-hover table-borderless table-responsive">
-            <tbody>
-              <tr>
-                <th>
-                  Name&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-person"></i>
-                </th>
-                <td user-select-all>{{ data_ppt["data"]["name"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Added&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-calendar"></i>
-                </th>
-                <td>{{ data_ppt["data"]["date_created"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Last updated&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-pen"></i>
-                </th>
-                <td>{{ data["date_updated"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Age&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hourglass-start"></i>
-                </th>
-                <td>
-                  {{ data_ppt["data"]["age_now_months"] + ":" +
-                  data_ppt["data"]["age_now_days"] }}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  Sex&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-venus-mars"></i>
-                </th>
-                <td>{{ data_ppt["data"]["sex"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Comments&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-comments"></i>
-                </th>
-                <td>{{ data_ppt["data"]["comments"] }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card card-info">
-        <div class="card-header">Contact details</div>
-        <div class="card-body">
-          <div class="card-text">
-            <table class="table table-hover table-borderless table-responsive">
-              <tbody>
-                <tr>
-                  <th>
-                    Phone&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-phone"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["phone1"] }}</td>
-                </tr>
-                <tr>
-                  <th>
-                    E-mail&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["email1"] }}</td>
-                </tr>
-                <tr>
-                  <th>
-                    Phone 2&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-phone"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["phone2"] }}</td>
-                </tr>
-                <tr>
-                  <th>
-                    E-mail 2&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["email2"] }}</td>
-                </tr>
-                <tr>
-                  <th>
-                    Address&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-house"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["address"] }}</td>
-                </tr>
-                <tr>
-                  <th>
-                    Postcode&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-city"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["postcode"] }}</td>
-                </tr>
-                <tr>
-                  <th>
-                    City&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-city"></i>
-                  </th>
-                  <td>{{ data_ppt["data"]["city"] }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-      <div class="card card-info">
-        <div class="card-header">Birth information</div>
-        <div class="card-body">
-          <table class="table table-hover table-borderless table-responsive">
-            <tbody>
-              <tr>
-                <th>
-                  Delivery type&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hospital"></i>
-                </th>
-                <td user-select-all>{{ data_ppt["data"]["birth_type"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Gestational weeks&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-clock"></i>
-                </th>
-                <td>{{ data_ppt["data"]["gest_weeks"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Birth weight (g)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-weight-scale"></i>
-                </th>
-                <td>{{ data_ppt["data"]["birth_weight"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Head circumference (cm)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-ruler"></i>
-                </th>
-                <td>{{ data_ppt["data"]["head_cincumference"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Apgar&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-check"></i>
-                </th>
-                <td>
-                  {{ data_ppt["data"]["apgar1"] }} |
-                  {{ data_ppt["data"]["apgar2"] }} | {{ data_ppt["data"]["apgar3"] }}
-                </td>
-              </tr>
-              <tr>
-                <th>
-                  Hearing&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-headphones"></i>
-                </th>
-                <td>{{ data_ppt["data"]["hearing"] }}</td>
-              </tr>
-              <tr>
-                <th>
-                  Diagnoses&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-user-doctor"></i>
-                </th>
-                <td>{{ data_ppt["data"]["diagnoses"] }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    {% endif %}
-    <br>
-    <br>
-    <br>
+<header>
+  <div class="jumbotron jumbotron-fluid">
     <div class="container">
-      <div class="row">
-        <div class="card card-table">
-          <div class="card-body">
-            <h5 class="card-title">Participants</h5>
-            <h6 class="card-subtitle mb-2 text-muted">Click IDs to see a participant's profile</h6>
-            <div class="card-text" width="10%">{{ data["table"]|safe }}</div>
-          </div>
+      <h1 class="display-4">Participants</h1>
+      <p class="lead">Showing all participants in database.</p>
+    </div>
+  </div>
+  <hr class="my-4">
+</header>
+
+<body>
+  <a href="{{ url_for('participant_new') }}">
+    <button type="button" class="btn btn-success">
+      <i class="fa fa-plus"></i>&nbsp;&nbsp;New
+      participant
+    </button>
+  </a>
+  {% if data_ppt and ppt_id!="-- Select one --" %}
+  <a href="{{ url_for('participant_modify', ppt_id = ppt_id) }}">
+    <button type="button" class="btn btn-warning">
+      <i class="fa fa-pen"></i>&nbsp;&nbsp;Modify participant
+    </button>
+  </a>
+  <a href="{{ url_for('questionnaire_new', ppt_id = ppt_id) }}">
+    <button type="button" class="btn btn-primary">
+      <i class="fa fa-clipboard"></i>&nbsp;&nbsp;Add questionnaire
+    </button>
+  </a>
+  {% endif %}
+  <form method="post">
+    <div class="input-group mb-3 col-3">
+      <div class="input-group-prepend">
+        <span class="input-group-text" id="study-addon">Study</span>
+      </div>
+      <select class="form-select col-1" id="inputPptId" name="inputPptId" onchange="this.form.submit()"
+        aria-describedby="study-addon">
+        <option selected>-- Select one --</option>
+        {% for p in ppt_options %}
+        <option {% if ppt_id==p %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </form>
+  {% if data_ppt and ppt_id!="-- Select one --" %}
+  <div clas="row">
+    <h2>
+      Participant ID: <a href="{{ url_for('participants', ppt_id=ppt_id) }}">{{ ppt_id }}</a>
+    </h2>
+  </div>
+  <br>
+  <div class="card card-info">
+    <div class="card-header">Participant information</div>
+    <div class="card-body">
+      <table class="table table-hover table-borderless table-responsive">
+        <tbody>
+          <tr>
+            <th>
+              Name&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-person"></i>
+            </th>
+            <td user-select-all>{{ data_ppt["data"]["name"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Added&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-calendar"></i>
+            </th>
+            <td>{{ data_ppt["data"]["date_created"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Last updated&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-pen"></i>
+            </th>
+            <td>{{ data["date_updated"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Age&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hourglass-start"></i>
+            </th>
+            <td>
+              {{ data_ppt["data"]["age_now_months"] + ":" +
+              data_ppt["data"]["age_now_days"] }}
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Sex&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-venus-mars"></i>
+            </th>
+            <td>{{ data_ppt["data"]["sex"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Comments&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-comments"></i>
+            </th>
+            <td>{{ data_ppt["data"]["comments"] }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card card-info">
+    <div class="card-header">Contact details</div>
+    <div class="card-body">
+      <div class="card-text">
+        <table class="table table-hover table-borderless table-responsive">
+          <tbody>
+            <tr>
+              <th>
+                Phone&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-phone"></i>
+              </th>
+              <td>{{ data_ppt["data"]["phone1"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                E-mail&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i>
+              </th>
+              <td>{{ data_ppt["data"]["email1"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Phone 2&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-phone"></i>
+              </th>
+              <td>{{ data_ppt["data"]["phone2"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                E-mail 2&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-envelope"></i>
+              </th>
+              <td>{{ data_ppt["data"]["email2"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Address&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-house"></i>
+              </th>
+              <td>{{ data_ppt["data"]["address"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Postcode&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-city"></i>
+              </th>
+              <td>{{ data_ppt["data"]["postcode"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                City&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-city"></i>
+              </th>
+              <td>{{ data_ppt["data"]["city"] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="card card-info">
+    <div class="card-header">Birth information</div>
+    <div class="card-body">
+      <table class="table table-hover table-borderless table-responsive">
+        <tbody>
+          <tr>
+            <th>
+              Delivery type&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hospital"></i>
+            </th>
+            <td user-select-all>{{ data_ppt["data"]["birth_type"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Gestational weeks&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-clock"></i>
+            </th>
+            <td>{{ data_ppt["data"]["gest_weeks"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Birth weight (g)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-weight-scale"></i>
+            </th>
+            <td>{{ data_ppt["data"]["birth_weight"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Head circumference (cm)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-ruler"></i>
+            </th>
+            <td>{{ data_ppt["data"]["head_cincumference"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Apgar&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-check"></i>
+            </th>
+            <td>
+              {{ data_ppt["data"]["apgar1"] }} |
+              {{ data_ppt["data"]["apgar2"] }} | {{ data_ppt["data"]["apgar3"] }}
+            </td>
+          </tr>
+          <tr>
+            <th>
+              Hearing&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-headphones"></i>
+            </th>
+            <td>{{ data_ppt["data"]["hearing"] }}</td>
+          </tr>
+          <tr>
+            <th>
+              Diagnoses&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-user-doctor"></i>
+            </th>
+            <td>{{ data_ppt["data"]["diagnoses"] }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+  <br>
+  <br>
+  <br>
+  <div class="container">
+    <div class="row">
+      <div class="card card-table">
+        <div class="card-body">
+          <h5 class="card-title">Participants</h5>
+          <h6 class="card-subtitle mb-2 text-muted">Click IDs to see a participant's profile</h6>
+          <div class="card-text" width="10%">{{ data["table"]|safe }}</div>
         </div>
       </div>
     </div>
-  </body>
+  </div>
+</body>
 {% endblock content %}

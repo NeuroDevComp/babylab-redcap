@@ -13,7 +13,8 @@
       <div class="input-group-prepend">
         <span class="input-group-text" id="study-addon">Study</span>
       </div>
-      <select class="form-select" id="inputStudy" name="inputStudy" onchange="this.form.submit()">
+      <select class="form-select" id="inputStudy" name="inputStudy" aria-describedby="study-addon"
+        onchange="this.form.submit()">
         <option disabled {% if not selected_study %}selected{% endif %}>Select a study...</option>
         {% for k, v in data_dict["appointment_study"].items() %}
         <option {% if selected_study==v %}selected{% endif %} value="{{ k }}">{{ v }}</option>
