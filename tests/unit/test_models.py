@@ -38,3 +38,44 @@ def test_questionnaire_class(questionnaire_record):
     assert hasattr(q, "isestimated")
     assert hasattr(q, "record_id")
     assert hasattr(q, "data")
+
+
+def test_records_class(records):
+    """Test participant class."""
+    assert hasattr(records, "appointments")
+    assert hasattr(records, "participants")
+    assert hasattr(records, "questionnaires")
+    assert isinstance(records.appointments, models.RecordList)
+    assert isinstance(records.participants, models.RecordList)
+    assert isinstance(records.questionnaires, models.RecordList)
+
+
+def test_records_class_participants(records):
+    """Test records class (Participants)"""
+    assert hasattr(records.participants, "records")
+    assert hasattr(records.participants, "to_df")
+    assert isinstance(records.participants.records, dict)
+    assert all(
+        isinstance(r, models.Participant) for r in records.participants.records.values()
+    )
+
+
+def test_records_class_appointments(records):
+    """Test records class (Appointments)"""
+    assert hasattr(records.appointments, "records")
+    assert hasattr(records.appointments, "to_df")
+    assert isinstance(records.appointments.records, dict)
+    assert all(
+        isinstance(r, models.Appointment) for r in records.appointments.records.values()
+    )
+
+
+def test_records_class_questionnaires(records):
+    """Test records class (Questionnaires)"""
+    assert hasattr(records.questionnaires, "records")
+    assert hasattr(records.questionnaires, "to_df")
+    assert isinstance(records.questionnaires.records, dict)
+    assert all(
+        isinstance(r, models.Questionnaire)
+        for r in records.questionnaires.records.values()
+    )

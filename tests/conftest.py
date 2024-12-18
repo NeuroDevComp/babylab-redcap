@@ -8,6 +8,7 @@ from random import choice, choices
 from datetime import datetime
 import pytest
 from dotenv import load_dotenv
+from babylab import models
 
 
 class MissingEnvException(Exception):
@@ -98,7 +99,7 @@ def participant_data_dict() -> dict:
         "participant_name": generate_str(),
         "participant_age_now_months": str(choice(range(12))),
         "participant_age_now_days": str(choice(range(31))),
-        "participant_sex": str(choice(range(1, 2))),
+        "participant_sex": str(choice(range(6))),
         "participant_twin": "",
         "participant_parent1_name": generate_str(),
         "participant_parent1_surname": generate_str(),
@@ -160,7 +161,7 @@ def create_record(option: str) -> dict:
             "participant_age_now_months": choice(range(12)),
             "participant_age_now_days": choice(range(31)),
             "participant_days_since_last_appointment": "",
-            "participant_sex": "1",
+            "participant_sex": str(choice(range(1, 6))),
             "participant_twin": "",
             "participant_parent1_name": generate_str(),
             "participant_parent1_surname": generate_str(),
@@ -172,17 +173,17 @@ def create_record(option: str) -> dict:
             "participant_phone2": generate_str(),
             "participant_address": generate_str(),
             "participant_city": generate_str(),
-            "participant_postcode": "41600",
-            "participant_birth_type": "1",
-            "participant_gest_weeks": "42",
-            "participant_birth_weight": "4343",
-            "participant_head_circumference": "32",
-            "participant_apgar1": "0",
-            "participant_apgar2": "3",
-            "participant_apgar3": "4",
-            "participant_hearing": "2",
-            "participant_diagnoses": generate_str(),
-            "participant_comments": generate_str(),  # pylint: disable=line-too-long
+            "participant_postcode": "".join([str(x) for x in choices(range(9), k=5)]),
+            "participant_birth_type": choice(["1", "2"]),
+            "participant_gest_weeks": str(choice(range(34, 43))),
+            "participant_birth_weight": str(choice(range(2700, 4500))),
+            "participant_head_circumference": str(choice(range(32, 38))),
+            "participant_apgar1": str(choice(range(10))),
+            "participant_apgar2": str(choice(range(10))),
+            "participant_apgar3": str(choice(range(10))),
+            "participant_hearing": choice(["1", "2"]),
+            "participant_diagnoses": generate_str(50),
+            "participant_comments": " ".join([generate_str(25) for _ in range(3)]),
             "participants_complete": "2",
         }
 
@@ -200,9 +201,9 @@ def create_record(option: str) -> dict:
             ),
             "appointment_date": datetime.strptime("2024-12-31 14:09", "%Y-%m-%d %H:%M"),
             "appointment_taxi_address": generate_str(),
-            "appointment_taxi_isbooked": "1",
-            "appointment_status": "3",
-            "appointment_comments": "",
+            "appointment_taxi_isbooked": choice(["1", "2"]),
+            "appointment_status": str(choice(range(1, 6))),
+            "appointment_comments": ". ".join([generate_str(25) for _ in range(3)]),
             "appointments_complete": "2",
         }
 
@@ -255,6 +256,16 @@ def questionnaire_record() -> dict:
     """Create REDcap record fixture.
 
     Returns:
-        dict: A REDcap record fixture.
+        dict: A REDCap record fixture.
     """
     return create_record("questionnaire")
+
+
+@pytest.fixture
+def records() -> list:
+    """Create REDCap participant record list fixture.
+
+    Returns:
+        list: A REDCap record list fixture.
+    """
+    return models.Records(token=get_api_key())

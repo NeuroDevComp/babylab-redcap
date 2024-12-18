@@ -18,6 +18,7 @@ install:
 
 test:
 	python -m pytest -v 
+	python -m pytest --cov=babylab tests/
 
 docker-build:
 	docker build --tag babylab-redcap . 
