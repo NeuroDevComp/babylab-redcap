@@ -17,7 +17,7 @@ install:
 	python -m pip install -r requirements.txt
 
 test:
-	pyhon -m pytest
+	python -m pytest -v 
 
 docker-build:
 	docker build --tag babylab-redcap . 
