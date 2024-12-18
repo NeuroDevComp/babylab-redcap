@@ -7,6 +7,7 @@ import re
 import json
 import zipfile
 import os
+from datetime import datetime
 from collections import OrderedDict
 from dataclasses import dataclass
 import requests
@@ -27,6 +28,7 @@ def post_request(
 
     Raises:
         ValueError: If API token contains non-alphanumeric characters.
+
     Returns:
         dict: HTTP request response in JSON format.
     """
@@ -42,7 +44,6 @@ def post_request(
     )
     r.raise_for_status()
     return r
-
 
 
 def get_redcap_version(**kwargs) -> str:
@@ -62,6 +63,43 @@ def get_redcap_version(**kwargs) -> str:
         return print(e)
 
 
+def get_data_dict(**kwargs):
+    """Get data dictionaries for categorical variables
+
+    Returns:
+        **kwargs: Additional arguments passed tp ``post_request``.
+    """
+    items = [
+        "participant_sex",
+        "participant_birth_type",
+        "participant_hearing",
+        "appointment_study",
+        "appointment_status",
+        "language_lang1",
+        "language_lang2",
+        "language_lang3",
+        "language_lang4",
+    ]
+    fields = {
+        "content": "metadata",
+        "format": "json",
+        "returnFormat": "json",
+    }
+
+    for idx, i in enumerate(items):
+        fields[f"fields[{idx}]"] = i
+    r = json.loads(post_request(fields=fields, **kwargs).text)
+    dicts = {}
+    for k, v in zip(items, r):
+        options = v["select_choices_or_calculations"].split(" | ")
+        options_parsed = {}
+        for o in options:
+            x = o.split(", ")
+            options_parsed[x[0]] = x[1]
+        dicts[k] = options_parsed
+    return dicts
+
+
 def get_records(**kwargs):
     """Return records as JSON.
 
@@ -76,7 +114,15 @@ def get_records(**kwargs):
         "format": "json",
         "type": "flat",
     }
-    return post_request(fields=fields, **kwargs).json()
+    records = post_request(fields=fields, **kwargs).json()
+    for r in records:
+        for k, v in r.items():
+            if "date" in k and v:
+                try:
+                    r[k] = datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    r[k] = datetime.strptime(v, "%Y-%m-%d %H:%M")
+    return records
 
 
 def add_participant(data: dict, modifying: bool = False, **kwargs):
@@ -139,43 +185,6 @@ def add_questionnaire(data: dict, **kwargs):
     return post_request(fields=fields, **kwargs)
 
 
-def get_data_dict(**kwargs):
-    """Get data dictionaries for categorical variables
-
-    Returns:
-        **kwargs: Additional arguments passed tp ``post_request``.
-    """
-    items = [
-        "participant_sex",
-        "participant_birth_type",
-        "participant_hearing",
-        "appointment_study",
-        "appointment_status",
-        "language_lang1",
-        "language_lang2",
-        "language_lang3",
-        "language_lang4",
-    ]
-    fields = {
-        "content": "metadata",
-        "format": "json",
-        "returnFormat": "json",
-    }
-
-    for idx, i in enumerate(items):
-        fields[f"fields[{idx}]"] = i
-    r = json.loads(post_request(fields=fields, **kwargs).text)
-    dicts = {}
-    for k, v in zip(items, r):
-        options = v["select_choices_or_calculations"].split(" | ")
-        options_parsed = {}
-        for o in options:
-            x = o.split(", ")
-            options_parsed[x[0]] = x[1]
-        dicts[k] = options_parsed
-    return dicts
-
-
 def redcap_backup(file: str = "tmp/backup.zip", **kwargs) -> dict:
     """Download a backup of the REDCap database
 
@@ -211,6 +220,10 @@ def redcap_backup(file: str = "tmp/backup.zip", **kwargs) -> dict:
         ).text
     )
     records = get_records(**kwargs)
+    for r in records:
+        for k, v in r.items():
+            if isinstance(v, datetime):
+                r[k] = datetime.strftime(v, "%Y-%m-%d %H:%M")
     backup = {
         "project": project,
         "instruments": instruments,
@@ -236,9 +249,13 @@ class Participant:
     """Participant in database"""
 
     def __init__(self, data):
+        data = {
+            re.sub("participant_", "", k): v
+            for k, v in data.items()
+            if k.startswith("participant_") or k == "record_id"
+        }
         self.record_id = data["record_id"]
         self.data = data
-        self.appointments = {}
 
     def __repr__(self):
         return f" Participant {self.record_id}"
@@ -251,6 +268,12 @@ class Appointment:
     """Appointment in database"""
 
     def __init__(self, data):
+        data = {
+            re.sub("appointment_", "", k): v
+            for k, v in data.items()
+            if k.startswith("appointment_")
+            or k in ["record_id", "redcap_repeat_instance"]
+        }
         self.record_id = data["record_id"]
         self.data = data
         self.appointment_id = (
@@ -270,6 +293,11 @@ class Questionnaire:
     """Language questionnaire in database"""
 
     def __init__(self, data):
+        data = {
+            re.sub("language_", "", k): v
+            for k, v in data.items()
+            if k.startswith("language_") or k in ["record_id", "redcap_repeat_instance"]
+        }
         self.record_id = data["record_id"]
         self.questionnaire_id = (
             data["record_id"] + ":" + str(data["redcap_repeat_instance"])
@@ -278,7 +306,7 @@ class Questionnaire:
         self.data = data
         for i in range(1, 5):
             l = f"lang{i}_exp"
-            self.data[l] = float(self.data[l]) / 100 if self.data[l] else 0.0
+            self.data[l] = int(self.data[l]) if self.data[l] else 0
 
     def __repr__(self):
         return (
@@ -332,33 +360,17 @@ class Records:
         questionnaires = {}
         for r in records:
             if r["redcap_repeat_instance"] and r["appointment_status"]:
-                data = {
-                    re.sub("appointment_", "", k): v
-                    for k, v in r.items()
-                    if "appointment_" in k
-                    or k in ["record_id", "redcap_repeat_instance"]
-                }
-                data["appointment_id"] = (
-                    data["record_id"] + ":" + str(data["redcap_repeat_instance"])
+                r["appointment_id"] = (
+                    r["record_id"] + ":" + str(r["redcap_repeat_instance"])
                 )
-                appointments[data["appointment_id"]] = Appointment(data)
+                appointments[r["appointment_id"]] = Appointment(r)
             if r["redcap_repeat_instance"] and r["language_lang1"]:
-                data = {
-                    re.sub("language_", "", k): v
-                    for k, v in r.items()
-                    if "language_" in k or k in ["record_id", "redcap_repeat_instance"]
-                }
-                data["questionnaire_id"] = (
-                    data["record_id"] + ":" + str(data["redcap_repeat_instance"])
+                r["questionnaire_id"] = (
+                    r["record_id"] + ":" + str(r["redcap_repeat_instance"])
                 )
-                questionnaires[data["questionnaire_id"]] = Questionnaire(data)
+                questionnaires[r["questionnaire_id"]] = Questionnaire(r)
             if not r["redcap_repeat_instrument"]:
-                data = {
-                    re.sub("participant_", "", k): v
-                    for k, v in r.items()
-                    if "participant_" in k or k == "record_id"
-                }
-                participants[r["record_id"]] = Participant(data)
+                participants[r["record_id"]] = Participant(r)
 
         # add appointments and questionnaires to each participant
         for p, v in participants.items():
