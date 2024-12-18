@@ -12,40 +12,73 @@ from babylab import models
 from babylab import calendar
 
 
-def format_df(x: DataFrame, data_dict: dict) -> DataFrame:
+def format_percentage(x: float | int) -> str:
+    """Format number into percentage.
+
+    Args:
+        x (float | int): Number to format. Must be higher than or equal to zero, and lower than or equal to one.
+
+    Raises:
+        ValueError: If number is not higher than or equal to zero, and lower than or equal to one.
+
+    Returns:
+        str: Formatted percentage
+    """  # pylint: disable=line-too-long
+    if x > 1 or x < 0:
+        raise ValueError(
+            "`x` higher than or equal to zero, and lower than or equal to one"
+        )
+    return str(int(float(x) * 100)) if x else ""
+
+
+def format_taxi_isbooked(address: str, isbooked: str) -> str:
+    """Format ``taxi_isbooked`` variable to HTML.
+
+    Args:
+        address (str): ``taxi_address`` value.
+        isbooked (str): ``taxi_isbooked`` value.
+
+    Returns:
+        str: Formatted HTML string.
+    """  # pylint: disable=line-too-long
+    if isbooked not in ["0", "1"]:
+        raise ValueError("`is_booked` must be one of '0' or '1'")
+    if not address:
+        return ""
+    if int(isbooked):
+        return "<p style='color: green;'>Yes</p>"
+    return "<p style='color: red;'>No</p>"
+
+
+def format_df(
+    x: DataFrame,
+    data_dict: dict,
+    prefixes: list[str] = None,
+) -> DataFrame:
     """Reformat dataframe.
 
     Args:
         x (DataFrame): Dataframe to reformat.
         data_dict (dict): Data dictionary to labels to use, as returned by ``models.get_data_dict``.
+        prefixes (list[str]): List of `refixes to look for in variable names.
 
     Returns:
-        DataFrame: A reformatted Dataframe.
+        DataFrame: A reformated Dataframe.
     """
+    if prefixes is None:
+        prefixes = ["participant", "appointment", "language"]
     for col_name, col_values in x.items():
-        kdict = [
-            "participant_" + col_name,
-            "appointment_" + col_name,
-            "language_" + col_name,
-        ]
+        kdict = [x + "_" + col_name for x in prefixes]
         for k in kdict:
             if k in data_dict:
                 x[col_name] = [data_dict[k][v] if v else "" for v in col_values]
             if "lang" in col_name:
                 x[col_name] = ["" if v == "None" else v for v in x[col_name]]
             if "exp" in col_name:
-                x[col_name] = [
-                    "" if v == 0 else round(float(v) * 100, None) for v in col_values
-                ]
+                x[col_name] = [format_percentage(v) for v in col_values]
             if "taxi_isbooked" in col_name:
-                for idx, (a, i) in enumerate(zip(x["taxi_address"], x[col_name])):
-                    if a and i == "1":
-                        x[col_name][idx] = "<p style='color: green;'>Yes</p>"
-                    if a and i == "0":
-                        x[col_name][idx] = "<p style='color: red;'>No</p>"
-                    if not a:
-                        x[col_name][idx] = ""
-
+                pairs = zip(x["taxi_address"], x[col_name])
+                x[col_name] = [format_taxi_isbooked(a, i) for a, i in pairs]
     return x
 
 
