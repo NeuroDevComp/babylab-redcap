@@ -18,9 +18,9 @@ def get_age(birth_date: str | datetime, timestamp: str | datetime = None):
     """  # pylint: disable=line-too-long
     if timestamp is None:
         timestamp = datetime.today()
-    if not isinstance(timestamp, datetime):
+    if isinstance(timestamp, str):
         timestamp = datetime.strptime(timestamp, "%Y-%m-%d")
-    if not isinstance(birth_date, datetime):
+    if isinstance(birth_date, str):
         birth_date = datetime.strptime(birth_date, "%Y-%m-%d")
     delta = relativedelta.relativedelta(timestamp, birth_date)
     return [delta.months + (delta.years * 12), delta.days]
