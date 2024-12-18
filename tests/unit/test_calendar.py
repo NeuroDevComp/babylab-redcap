@@ -1,8 +1,8 @@
 """Test calendar"""
 
+from datetime import datetime
 import pytest
 from babylab import calendar as cal
-from datetime import datetime
 
 
 def test_get_age():

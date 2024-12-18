@@ -5,10 +5,10 @@ venv:
 	python -m venv .venv
 
 serve:
-	python -m flask --app babylab.main run
+	python -m flask --app babylab.app run
 
 debug:
-	python -m flask --app babylab.main run  --debug 
+	python -m flask --app babylab.app run  --debug 
 
 freeze:
 	python -m pip freeze -l > requirements.txt 

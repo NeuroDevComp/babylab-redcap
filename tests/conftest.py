@@ -157,8 +157,8 @@ def create_record(option: str) -> dict:
                 "2024-12-16 11:13:00", "%Y-%m-%d %H:%M:%S"
             ),
             "participant_name": generate_str(),
-            "participant_age_now_months": "5",
-            "participant_age_now_days": "30",
+            "participant_age_now_months": choice(range(12)),
+            "participant_age_now_days": choice(range(31)),
             "participant_days_since_last_appointment": "",
             "participant_sex": "1",
             "participant_twin": "",

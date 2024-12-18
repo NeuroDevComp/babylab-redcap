@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """
 Babylab database Fask application
 """
@@ -16,6 +18,7 @@ from flask import (
     send_file,
 )
 from babylab import models
+from babylab import api
 from babylab import utils
 from babylab import email
 
@@ -34,7 +37,7 @@ def token_required(f):
 
     @wraps(f)
     def decorated(*args, **kwargs):
-        redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+        redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
         if redcap_version:
             return f(*args, **kwargs)
         flash("Access restricted. Please, log in", "error")
@@ -60,12 +63,12 @@ def error_443(error):
 def index(redcap_version: str = None):
     """Index page"""
     if not redcap_version:
-        redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+        redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if request.method == "POST":
         finput = request.form
         app.config["API_KEY"] = finput["apiToken"]
         app.config["EMAIL"] = finput["email"]
-        redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+        redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
         if redcap_version:
             flash("Logged in", "success")
             return render_template("index.html", redcap_version=redcap_version)
@@ -77,13 +80,13 @@ def index(redcap_version: str = None):
 @token_required
 def dashboard(records: models.Records = None, data: dict = None):
     """Dashboard page"""
-    redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+    redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if records is None:
         try:
             records = models.Records(token=app.config["API_KEY"])
         except Exception:  # pylint: disable=broad-exception-caught
             return redirect(url_for("index", redcap_version=redcap_version))
-    data_dict = models.get_data_dict(token=app.config["API_KEY"])
+    data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_dashboard(records, data_dict)
     return render_template("dashboard.html", data=data)
 
@@ -100,7 +103,7 @@ def participants(
     """Participants database"""
     if records is None:
         records = models.Records(token=app.config["API_KEY"])
-    data_dict = models.get_data_dict(token=app.config["API_KEY"])
+    data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_participants(records, data_dict=data_dict)
     if ppt_options is None:
         ppt_options = list(records.participants.to_df().index)
@@ -135,8 +138,8 @@ def record_id(
 ):
     """Show the record_id for that participant"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
-    redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
+    redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if records is None:
         try:
             records = models.Records(token=app.config["API_KEY"])
@@ -155,7 +158,7 @@ def record_id(
 def participant_new(data_dict: dict = None):
     """New participant page"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if request.method == "POST":
         finput = request.form
         date_now = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M")
@@ -191,7 +194,7 @@ def participant_new(data_dict: dict = None):
             "participant_comments": finput["inputComments"],
             "participants_complete": "2",
         }
-        models.add_participant(
+        api.add_participant(
             data,
             modifying=False,
             token=app.config["API_KEY"],
@@ -215,7 +218,7 @@ def participant_modify(
 ):
     """Modify participant page"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         data = (
             models.Records(token=app.config["API_KEY"])
@@ -258,7 +261,7 @@ def participant_modify(
             "participants_complete": "2",
         }
         try:
-            models.add_participant(
+            api.add_participant(
                 data,
                 modifying=True,
                 token=app.config["API_KEY"],
@@ -280,7 +283,7 @@ def appointments(records: models.Records = None, data_dict: dict = None):
     """Appointments database"""
     if records is None:
         records = models.Records(token=app.config["API_KEY"])
-    data_dict = models.get_data_dict(token=app.config["API_KEY"])
+    data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_appointments(records, data_dict=data_dict)
     return render_template("appointments.html", data=data)
 
@@ -292,7 +295,7 @@ def appointment_id(
 ):
     """Show the record_id for that appointment"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         try:
             records = models.Records(token=app.config["API_KEY"])
@@ -322,7 +325,7 @@ def appointment_id(
 def appointment_new(ppt_id: str, data_dict: dict = None):
     """New appointment page"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if request.method == "POST":
         finput = request.form
         date_now = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M")
@@ -344,7 +347,7 @@ def appointment_new(ppt_id: str, data_dict: dict = None):
         }
 
         try:
-            models.add_appointment(data, token=app.config["API_KEY"])
+            api.add_appointment(data, token=app.config["API_KEY"])
             flash("Appointment added!", "success")
             records = models.Records(token=app.config["API_KEY"])
             appt_id = list(records.participants.records[ppt_id].appointments.records)[
@@ -403,7 +406,7 @@ def appointment_modify(
 ):
     """Modify appointment page"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         data = (
             models.Records(token=app.config["API_KEY"])
@@ -433,7 +436,7 @@ def appointment_modify(
             "appointments_complete": "2",
         }
         try:
-            models.add_appointment(
+            api.add_appointment(
                 data,
                 token=app.config["API_KEY"],
             )
@@ -492,12 +495,12 @@ def studies(
     data: dict = None,
 ):
     """Studies page"""
-    data_dict = models.get_data_dict(token=app.config["API_KEY"])
+    data_dict = api.get_data_dict(token=app.config["API_KEY"])
 
     if request.method == "POST":
         finput = request.form
         selected_study = finput["inputStudy"]
-        redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+        redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
         if records is None:
             try:
                 records = models.Records(token=app.config["API_KEY"])
@@ -521,7 +524,7 @@ def questionnaires(records: models.Records = None, data_dict: dict = None):
     """Participants database"""
     if records is None:
         records = models.Records(token=app.config["API_KEY"])
-    data_dict = models.get_data_dict(token=app.config["API_KEY"])
+    data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_questionnaires(records, data_dict=data_dict)
     return render_template("questionnaires.html", data=data, data_dict=data_dict)
 
@@ -535,7 +538,7 @@ def questionnaire_id(
     data: dict = None,
 ):
     """Show a language questionnaire"""
-    data_dict = models.get_data_dict(token=app.config["API_KEY"])
+    data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         try:
             records = models.Records(token=app.config["API_KEY"])
@@ -564,7 +567,7 @@ def questionnaire_id(
 def questionnaire_new(ppt_id: str, data_dict: dict = None):
     """New langage questionnaire page"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if request.method == "POST":
         finput = request.form
         date_now = datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d %H:%M")
@@ -596,7 +599,7 @@ def questionnaire_new(ppt_id: str, data_dict: dict = None):
             "language_comments": finput["inputComments"],
             "language_complete": "2",
         }
-        models.add_questionnaire(
+        api.add_questionnaire(
             data,
             token=app.config["API_KEY"],
         )
@@ -621,7 +624,7 @@ def questionnaire_modify(
 ):
     """Modify language questionnaire page"""
     if data_dict is None:
-        data_dict = models.get_data_dict(token=app.config["API_KEY"])
+        data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = (
         models.Records(token=app.config["API_KEY"])
         .questionnaires.records[quest_id]
@@ -653,7 +656,7 @@ def questionnaire_modify(
             "language_complete": "2",
         }
         try:
-            models.add_questionnaire(
+            api.add_questionnaire(
                 data,
                 token=app.config["API_KEY"],
             )
@@ -678,7 +681,7 @@ def questionnaire_modify(
 @token_required
 def other(records: models.Records = None):
     """Other pages"""
-    redcap_version = models.get_redcap_version(token=app.config["API_KEY"])
+    redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if records is None:
         try:
             records = models.Records(token=app.config["API_KEY"])
@@ -688,7 +691,7 @@ def other(records: models.Records = None):
         datetime.datetime.now(), "backup_%Y-%m-%d-%H-%M.zip"
     )
     if request.method == "post":
-        backup_file = models.redcap_backup(
+        backup_file = api.redcap_backup(
             file=os.path.join("temp", fname), token=app.config["API_KEY"]
         )
         return send_file(
@@ -715,9 +718,7 @@ def download_backup():
     fname = datetime.datetime.strftime(
         datetime.datetime.now(), "backup_%Y-%m-%d-%H-%M.zip"
     )
-    backup_file = models.redcap_backup(
-        file=f"temp/{fname}", token=app.config["API_KEY"]
-    )
+    backup_file = api.redcap_backup(file=f"temp/{fname}", token=app.config["API_KEY"])
     return send_file(
         "../" + backup_file,
         as_attachment=False,
