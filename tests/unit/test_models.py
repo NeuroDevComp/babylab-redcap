@@ -2,6 +2,7 @@
 """
 
 from datetime import datetime
+from pandas import DataFrame
 from babylab import models
 
 
@@ -13,6 +14,11 @@ def test_participant_class(participant_record):
 
     assert isinstance(p.record_id, str)
     assert isinstance(p.data, dict)
+
+    assert isinstance(repr(p), str)
+    assert "Participant " in repr(p)
+    assert isinstance(str(p), str)
+    assert "Participant " in str(p)
 
 
 def test_appointment_class(appointment_record):
@@ -30,6 +36,11 @@ def test_appointment_class(appointment_record):
     assert isinstance(a.status, str)
     assert isinstance(a.data, dict)
 
+    assert isinstance(repr(a), str)
+    assert "Appointment " in repr(a)
+    assert isinstance(str(a), str)
+    assert "Appointment " in str(a)
+
 
 def test_questionnaire_class(questionnaire_record):
     """Test questionnaire class."""
@@ -38,16 +49,47 @@ def test_questionnaire_class(questionnaire_record):
     assert hasattr(q, "isestimated")
     assert hasattr(q, "record_id")
     assert hasattr(q, "data")
+    assert isinstance(repr(q), str)
+    assert "questionnaire " in repr(q)
+    assert isinstance(str(q), str)
+    assert "questionnaire " in str(q)
 
 
-def test_records_class(records):
+def test_records_class(token):
     """Test participant class."""
+    records = models.Records(token=token)
     assert hasattr(records, "appointments")
     assert hasattr(records, "participants")
     assert hasattr(records, "questionnaires")
     assert isinstance(records.appointments, models.RecordList)
     assert isinstance(records.participants, models.RecordList)
     assert isinstance(records.questionnaires, models.RecordList)
+
+    assert isinstance(repr(records), str)
+    assert "REDCap database" in repr(records)
+    assert isinstance(str(records), str)
+    assert "REDCap database" in str(records)
+
+
+def test_recordlist_class_participants(token):
+    """Test RecordList class with participants."""
+    records = models.Records(token=token).participants
+    assert isinstance(records.records, dict)
+    assert isinstance(records.to_df(), DataFrame)
+
+
+def test_recordlist_class_appointments(token):
+    """Test RecordList class with appointments."""
+    records = models.Records(token=token).appointments
+    assert isinstance(records.records, dict)
+    assert isinstance(records.to_df(), DataFrame)
+
+
+def test_recordlist_class_questionnaires(token):
+    """Test RecordList class with questionnaires."""
+    records = models.Records(token=token).questionnaires
+    assert isinstance(records.records, dict)
+    assert isinstance(records.to_df(), DataFrame)
 
 
 def test_records_class_participants(records):

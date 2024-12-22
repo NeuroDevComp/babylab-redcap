@@ -8,7 +8,7 @@ serve:
 	python -m flask --app babylab.app run
 
 debug:
-	python -m flask --app babylab.app run  --debug 
+	python -m flask --app babylab.main run --debug 
 
 freeze:
 	python -m pip freeze -l > requirements.txt 
@@ -18,7 +18,7 @@ install:
 
 test:
 	python -m pytest -v 
-	python -m pytest --cov=babylab tests/
+	python -m pytest --cov-report html --cov=babylab tests/
 
 docker-build:
 	docker build --tag babylab-redcap . 

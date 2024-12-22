@@ -9,39 +9,7 @@ from datetime import datetime
 import pytest
 from dotenv import load_dotenv
 from babylab import models
-
-
-class MissingEnvException(Exception):
-    """If .env file is not found in user folder"""
-
-    def __init__(self, envpath):
-        msg = f".env file not found. Please, make sure to save your credentials in {envpath}"  # pylint: disable=line-too-long
-        super().__init__(msg)
-
-
-class MissingEnvToken(Exception):
-    """If token is not provided under 'API_TEST_TOKEN' key."""
-
-    def __init__(self):
-        msg = "No token was found under the 'API_TEST_TOKEN' key in your .env file."  # pylint: disable=line-too-long
-        super().__init__(msg)
-
-
-def get_api_key():
-    """Retrieve API credentials.
-
-    Raises:
-        MissingEnvException: If .en file is not located in ~/.env.
-    """
-    if os.getenv("GITHUB_ACTIONS") != "true":
-        envpath = os.path.expanduser(os.path.join("~", ".env"))
-        if not os.path.exists(envpath):
-            raise MissingEnvException(envpath)
-    load_dotenv(envpath)
-    t = os.getenv("API_TEST_KEY")
-    if not token:
-        raise MissingEnvToken
-    return t
+from babylab import create_app
 
 
 @pytest.fixture
@@ -99,7 +67,7 @@ def participant_data_dict() -> dict:
         "participant_name": generate_str(),
         "participant_age_now_months": str(choice(range(12))),
         "participant_age_now_days": str(choice(range(31))),
-        "participant_sex": str(choice(range(6))),
+        "participant_sex": str(choice(range(1, 6))),
         "participant_twin": "",
         "participant_parent1_name": generate_str(),
         "participant_parent1_surname": generate_str(),
@@ -201,7 +169,7 @@ def create_record(option: str) -> dict:
             ),
             "appointment_date": datetime.strptime("2024-12-31 14:09", "%Y-%m-%d %H:%M"),
             "appointment_taxi_address": generate_str(),
-            "appointment_taxi_isbooked": choice(["1", "2"]),
+            "appointment_taxi_isbooked": choice(["0", "1"]),
             "appointment_status": str(choice(range(1, 6))),
             "appointment_comments": ". ".join([generate_str(25) for _ in range(3)]),
             "appointments_complete": "2",
@@ -269,3 +237,9 @@ def records() -> list:
         list: A REDCap record list fixture.
     """
     return models.Records(token=get_api_key())
+
+
+@pytest.fixture
+def app():
+    """App factory for testing."""
+    return create_app()

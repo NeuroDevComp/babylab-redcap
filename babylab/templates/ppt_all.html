@@ -11,24 +11,6 @@
 </header>
 
 <body>
-  <a href="{{ url_for('participant_new') }}">
-    <button type="button" class="btn btn-success">
-      <i class="fa fa-plus"></i>&nbsp;&nbsp;New
-      participant
-    </button>
-  </a>
-  {% if data_ppt and ppt_id!="-- Select one --" %}
-  <a href="{{ url_for('participant_modify', ppt_id = ppt_id) }}">
-    <button type="button" class="btn btn-warning">
-      <i class="fa fa-pen"></i>&nbsp;&nbsp;Modify participant
-    </button>
-  </a>
-  <a href="{{ url_for('questionnaire_new', ppt_id = ppt_id) }}">
-    <button type="button" class="btn btn-primary">
-      <i class="fa fa-clipboard"></i>&nbsp;&nbsp;Add questionnaire
-    </button>
-  </a>
-  {% endif %}
   <form method="post">
     <div class="input-group mb-3 col-3">
       <div class="input-group-prepend">
@@ -43,10 +25,29 @@
       </select>
     </div>
   </form>
+  <a href="{{ url_for('ppt_new') }}">
+    <button type="button" class="btn btn-success">
+      <i class="fa fa-plus"></i>&nbsp;&nbsp;New
+      participant
+    </button>
+  </a>
+  {% if data_ppt and ppt_id!="-- Select one --" %}
+  <a href="{{ url_for('ppt_modify', ppt_id = ppt_id) }}">
+    <button type="button" class="btn btn-warning">
+      <i class="fa fa-pen"></i>&nbsp;&nbsp;Modify participant
+    </button>
+  </a>
+  <a href="{{ url_for('que_new', ppt_id = ppt_id) }}">
+    <button type="button" class="btn btn-primary">
+      <i class="fa fa-clipboard"></i>&nbsp;&nbsp;Add questionnaire
+    </button>
+  </a>
+  {% endif %}
+
   {% if data_ppt and ppt_id!="-- Select one --" %}
   <div clas="row">
     <h2>
-      Participant ID: <a href="{{ url_for('participants', ppt_id=ppt_id) }}">{{ ppt_id }}</a>
+      Participant ID: <a href="{{ url_for('ppt', ppt_id=ppt_id) }}">{{ ppt_id }}</a>
     </h2>
   </div>
   <br>
@@ -56,7 +57,7 @@
       <table class="table table-hover table-borderless table-responsive">
         <tbody>
           <tr>
-            <th>
+            <th width="47%">
               Name&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-person"></i>
             </th>
             <td user-select-all>{{ data_ppt["data"]["name"] }}</td>
@@ -105,7 +106,7 @@
         <table class="table table-hover table-borderless table-responsive">
           <tbody>
             <tr>
-              <th>
+              <th width="40%">
                 Phone&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-phone"></i>
               </th>
               <td>{{ data_ppt["data"]["phone1"] }}</td>
@@ -154,55 +155,57 @@
   <div class="card card-info">
     <div class="card-header">Birth information</div>
     <div class="card-body">
-      <table class="table table-hover table-borderless table-responsive">
-        <tbody>
-          <tr>
-            <th>
-              Delivery type&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hospital"></i>
-            </th>
-            <td user-select-all>{{ data_ppt["data"]["birth_type"] }}</td>
-          </tr>
-          <tr>
-            <th>
-              Gestational weeks&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-clock"></i>
-            </th>
-            <td>{{ data_ppt["data"]["gest_weeks"] }}</td>
-          </tr>
-          <tr>
-            <th>
-              Birth weight (g)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-weight-scale"></i>
-            </th>
-            <td>{{ data_ppt["data"]["birth_weight"] }}</td>
-          </tr>
-          <tr>
-            <th>
-              Head circumference (cm)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-ruler"></i>
-            </th>
-            <td>{{ data_ppt["data"]["head_cincumference"] }}</td>
-          </tr>
-          <tr>
-            <th>
-              Apgar&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-check"></i>
-            </th>
-            <td>
-              {{ data_ppt["data"]["apgar1"] }} |
-              {{ data_ppt["data"]["apgar2"] }} | {{ data_ppt["data"]["apgar3"] }}
-            </td>
-          </tr>
-          <tr>
-            <th>
-              Hearing&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-headphones"></i>
-            </th>
-            <td>{{ data_ppt["data"]["hearing"] }}</td>
-          </tr>
-          <tr>
-            <th>
-              Diagnoses&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-user-doctor"></i>
-            </th>
-            <td>{{ data_ppt["data"]["diagnoses"] }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="card-text">
+        <table class="table table-hover table-borderless table-responsive">
+          <tbody>
+            <tr>
+              <th width="60%">
+                Delivery type&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-hospital"></i>
+              </th>
+              <td user-select-all>{{ data_ppt["data"]["birth_type"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Gestational weeks&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-clock"></i>
+              </th>
+              <td>{{ data_ppt["data"]["gest_weeks"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Birth weight (g)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-weight-scale"></i>
+              </th>
+              <td>{{ data_ppt["data"]["birth_weight"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Head circ. (cm)&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-ruler"></i>
+              </th>
+              <td>{{ data_ppt["data"]["head_cincumference"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Apgar&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-check"></i>
+              </th>
+              <td>
+                {{ data_ppt["data"]["apgar1"] }} |
+                {{ data_ppt["data"]["apgar2"] }} | {{ data_ppt["data"]["apgar3"] }}
+              </td>
+            </tr>
+            <tr>
+              <th>
+                Hearing&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-headphones"></i>
+              </th>
+              <td>{{ data_ppt["data"]["hearing"] }}</td>
+            </tr>
+            <tr>
+              <th>
+                Diagnoses&nbsp;&nbsp;&nbsp;&nbsp;<i class="fa fa-user-doctor"></i>
+              </th>
+              <td>{{ data_ppt["data"]["diagnoses"] }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
   {% endif %}

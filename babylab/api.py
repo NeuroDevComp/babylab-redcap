@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
 """
-Functions to interact with the RedCAP API.
+Functions to interact with the REDCap API.
 """
 
 import json
 import zipfile
 import os
-from datetime import datetime
+import re
+import datetime
+from dataclasses import dataclass
 from collections import OrderedDict
 import requests
+from dateutil import relativedelta
+import win32com.client as win32
+import pythoncom
+import pandas as pd
 
 
 def post_request(
@@ -40,6 +46,8 @@ def post_request(
         data=fields,
         timeout=timeout,
     )
+    if not r.ok:
+        print(r.content.decode("utf-8"))
     r.raise_for_status()
     return r
 
@@ -93,7 +101,7 @@ def get_data_dict(**kwargs):
         options_parsed = {}
         for o in options:
             x = o.split(", ")
-            options_parsed[x[0]] = x[1].strip()
+            options_parsed[x[0].strip()] = x[1].strip()
         dicts[k] = options_parsed
     return dicts
 
@@ -113,14 +121,27 @@ def get_records(**kwargs):
         "type": "flat",
     }
     records = post_request(fields=fields, **kwargs).json()
-    for r in records:
-        for k, v in r.items():
-            if "date" in k and v:
-                try:
-                    r[k] = datetime.strptime(v, "%Y-%m-%d %H:%M:%S")
-                except ValueError:
-                    r[k] = datetime.strptime(v, "%Y-%m-%d %H:%M")
+    records = [datetimes_to_strings(r) for r in records]
     return records
+
+
+def datetimes_to_strings(data: dict):
+    """Return formatted datatimes as strings following the ISO 8061 date format.
+
+    It first tries to format the date as Y-m-d H:M. If error, it assumes the Y-m-d H:M:S is due and tries to format it accordingly.
+
+    Args:
+        data (dict): Dictionary that may contain datetimes.
+
+    Returns:
+        dict: Dictionary with datetimes formatted as strings.
+    """  # pylint: disable=line-too-long
+    for k, v in data.items():
+        if isinstance(v, datetime.datetime):
+            data[k] = datetime.datetime.strftime(v, "%Y-%m-%d %H:%M:%S")
+            if not v.second:
+                data[k] = datetime.datetime.strftime(v, "%Y-%m-%d %H:%M")
+    return data
 
 
 def add_participant(data: dict, modifying: bool = False, **kwargs):
@@ -138,7 +159,7 @@ def add_participant(data: dict, modifying: bool = False, **kwargs):
         "type": "flat",
         "overwriteBehavior": "normal" if modifying else "overwrite",
         "forceAutoNumber": "false" if modifying else "true",
-        "data": f"[{json.dumps(data)}]",
+        "data": f"[{json.dumps(datetimes_to_strings(data))}]",
     }
     return post_request(fields=fields, **kwargs)
 
@@ -158,7 +179,7 @@ def add_appointment(data: dict, **kwargs):
         "type": "flat",
         "overwriteBehavior": "overwrite",
         "forceAutoNumber": "false",
-        "data": f"[{json.dumps(data)}]",
+        "data": f"[{json.dumps(datetimes_to_strings(data))}]",
     }
     return post_request(fields=fields, **kwargs)
 
@@ -177,20 +198,17 @@ def add_questionnaire(data: dict, **kwargs):
         "type": "flat",
         "overwriteBehavior": "overwrite",
         "forceAutoNumber": "false",
-        "data": f"[{json.dumps(data)}]",
+        "data": f"[{json.dumps(datetimes_to_strings(data))}]",
     }
 
     return post_request(fields=fields, **kwargs)
 
 
-def redcap_backup(file: str = "tmp/backup.zip", **kwargs) -> dict:
+def redcap_backup(dirpath: str = "tmp", **kwargs) -> dict:
     """Download a backup of the REDCap database
 
     Args:
-        file (str, optional): Output file, with .json extension. Defaults to None.
-
-    Raises:
-        ValueError: If ``file`` does not have the .json extension.
+        dirpath (str, optional): Output directory. Defaults to "tmp".
 
     Returns:
         dict: A dictionary with the key data and metadata of the project.
@@ -217,27 +235,382 @@ def redcap_backup(file: str = "tmp/backup.zip", **kwargs) -> dict:
             **kwargs,
         ).text
     )
-    records = get_records(**kwargs)
-    for r in records:
-        for k, v in r.items():
-            if isinstance(v, datetime):
-                r[k] = datetime.strftime(v, "%Y-%m-%d %H:%M")
+    records = [datetimes_to_strings(r) for r in get_records(**kwargs)]
     backup = {
         "project": project,
         "instruments": instruments,
         "fields": fields,
         "records": records,
     }
-    dname = os.path.dirname(file)
-    if not os.path.exists(dname):
-        os.makedirs(dname)
+    os.mkdir(dirpath)
     for k, v in backup.items():
-        fpath = dname + "/" + k + ".json"
+        fpath = os.path.join(dirpath, k + ".json")
         with open(fpath, "w", encoding="utf-8") as f:
             json.dump(v, f)
-    for root, _, files in os.walk(dname, topdown=False):
+    file = (
+        "backup_"
+        + datetime.datetime.strftime(datetime.datetime.now(), "%Y-%m-%d-%H-%M-%S")
+        + ".zip"
+    )
+    file = os.path.join(dirpath, file)
+    for root, _, files in os.walk(dirpath, topdown=False):
         with zipfile.ZipFile(file, "w", zipfile.ZIP_DEFLATED) as z:
             for f in files:
-                if f.endswith(".json"):
-                    z.write(root + "/" + f)
+                z.write(os.path.join(root, f))
+
     return file
+
+
+class Participant:
+    """Participant in database"""
+
+    def __init__(self, data):
+        data = {
+            re.sub("participant_", "", k): v
+            for k, v in data.items()
+            if k.startswith("participant_") or k == "record_id"
+        }
+        self.record_id = data["record_id"]
+        self.data = data
+
+    def __repr__(self):
+        return f" Participant {self.record_id}"
+
+    def __str__(self):
+        return f" Participant {self.record_id}"
+
+
+class Appointment:
+    """Appointment in database"""
+
+    def __init__(self, data):
+        data = {
+            re.sub("appointment_", "", k): v
+            for k, v in data.items()
+            if k.startswith("appointment_")
+            or k in ["record_id", "redcap_repeat_instance"]
+        }
+        self.record_id = data["record_id"]
+        self.data = data
+        self.appointment_id = (
+            data["record_id"] + ":" + str(data["redcap_repeat_instance"])
+        )
+        self.status = data["status"]
+        self.date = data["date"]
+
+    def __repr__(self):
+        return f"Appointment {self.appointment_id}, participant {self.record_id}, {self.date}, {self.status}"  # pylint: disable=line-too-long
+
+    def __str__(self):
+        return f"Appointment {self.appointment_id}, participant {self.record_id}, {self.date}, {self.status}"  # pylint: disable=line-too-long
+
+
+class Questionnaire:
+    """Language questionnaire in database"""
+
+    def __init__(self, data):
+        data = {
+            re.sub("language_", "", k): v
+            for k, v in data.items()
+            if k.startswith("language_") or k in ["record_id", "redcap_repeat_instance"]
+        }
+        self.record_id = data["record_id"]
+        self.questionnaire_id = (
+            data["record_id"] + ":" + str(data["redcap_repeat_instance"])
+        )
+        self.isestimated = data["isestimated"]
+        self.data = data
+        for i in range(1, 5):
+            l = f"lang{i}_exp"
+            self.data[l] = int(self.data[l]) if self.data[l] else 0
+
+    def __repr__(self):
+        return (
+            f" Language questionnaire {self.questionnaire_id} from participant {self.record_id}"  # pylint: disable=no-member
+            + f"\n- L1 ({self.data['lang1']}) = {self.data['lang1_exp']}%"
+            + f"\n- L2 ({self.data['lang2']}) = {self.data['lang2_exp']}%"
+            + f"\n- L3 ({self.data['lang3']}) = {self.data['lang3_exp']}%"
+            + f"\n- L4 ({self.data['lang4']}) = {self.data['lang4_exp']}%"
+        )  # pylint: disable=line-too-long
+
+    def __str__(self):
+        return (
+            f" Language questionnaire {self.questionnaire_id} from participant {self.record_id}"  # pylint: disable=no-member
+            + f"\n- L1 ({self.data['lang1']}) = {self.data['lang1_exp']}%"
+            + f"\n- L2 ({self.data['lang2']}) = {self.data['lang2_exp']}%"
+            + f"\n- L3 ({self.data['lang3']}) = {self.data['lang3_exp']}%"
+            + f"\n- L4 ({self.data['lang4']}) = {self.data['lang4_exp']}%"
+        )  # pylint: disable=line-too-long
+
+
+@dataclass
+class RecordList:
+    """List of records"""
+
+    records: dict
+
+    def to_df(self) -> pd.DataFrame:
+        """Transform a dictionary dataset to a Pandas DataFrame.
+        Returns:
+            pd.DataFrame: Tabular dataset.
+        """
+        db_list = []
+        for v in self.records.values():
+            d = pd.DataFrame(v.data.items())
+            d = d.set_index([0])
+            db_list.append(d.transpose())
+        df = pd.concat(db_list)
+        df.index = pd.Index(df[df.columns[0]])
+        df = df[df.columns[1:]]
+        return df
+
+
+class Records:
+    """REDCap records"""
+
+    def __init__(self, **kwargs):
+
+        records = get_records(**kwargs)
+        participants = {}
+        appointments = {}
+        questionnaires = {}
+        for r in records:
+            if r["redcap_repeat_instance"] and r["appointment_status"]:
+                r["appointment_id"] = (
+                    r["record_id"] + ":" + str(r["redcap_repeat_instance"])
+                )
+                appointments[r["appointment_id"]] = Appointment(r)
+            if r["redcap_repeat_instance"] and r["language_lang1"]:
+                r["questionnaire_id"] = (
+                    r["record_id"] + ":" + str(r["redcap_repeat_instance"])
+                )
+                questionnaires[r["questionnaire_id"]] = Questionnaire(r)
+            if not r["redcap_repeat_instrument"]:
+                participants[r["record_id"]] = Participant(r)
+
+        # add appointments and questionnaires to each participant
+        for p, v in participants.items():
+            apps = {k: v for k, v in appointments.items() if v.record_id == p}
+            v.appointments = RecordList(apps)
+            ques = {k: v for k, v in questionnaires.items() if v.record_id == p}
+            v.questionnaires = RecordList(ques)
+
+        self.participants = RecordList(participants)
+        self.appointments = RecordList(appointments)
+        self.questionnaires = RecordList(questionnaires)
+
+    def __repr__(self):
+        return (
+            "REDCap database:"
+            + f"\n- {len(self.participants.records)} participants"
+            + f"\n- {len(self.appointments.records)} appointments"
+            + f"\n- {len(self.questionnaires.records)} language questionnaires"  # pylint: disable=line-too-long
+        )
+
+    def __str__(self):
+        return (
+            "REDCap database:"
+            + f"\n- {len(self.participants.records)} participants"
+            + f"\n- {len(self.appointments.records)} appointments"
+            + f"\n- {len(self.questionnaires.records)} language questionnaires"  # pylint: disable=line-too-long
+        )
+
+
+def get_age(
+    birth_date: str | datetime.datetime, timestamp: str | datetime.datetime = None
+):
+    """Estimate age in months and days at some timestamp based on date of birth.
+
+    Args:
+        birth_date (str | datetime.datetime): Birthdate as ``datetime`` object or str in "Y-m-d" format. Defaults to current date (``datetime.today()``).
+        timestamp (str | datetime.datetime, optional): Time for which the age is calculated. Defaults to None.
+
+    Returns:
+        list[int]: Age in months and days.
+    """  # pylint: disable=line-too-long
+    if timestamp is None:
+        timestamp = datetime.datetime.today()
+    if isinstance(timestamp, str):
+        timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d")
+    if isinstance(birth_date, str):
+        birth_date = datetime.datetime.strptime(birth_date, "%Y-%m-%d")
+    delta = relativedelta.relativedelta(timestamp, birth_date)
+    return [delta.months + (delta.years * 12), delta.days]
+
+
+def get_birth_date(age: str, timestamp: str | datetime.datetime = None):
+    """Calculate date of birth based on age at some timestamp.
+
+    Args:
+        age (str): Age in months and days (``m:d`` format) at the timestamp.
+        timestamp (str | datetime, optional): Time at which age was calculated. Defaults to ``datetime.today()``.
+
+    Returns:
+        _type_: _description_
+    """  # pylint: disable=line-too-long
+    if timestamp is None:
+        timestamp = datetime.datetime.today()
+    if not isinstance(timestamp, datetime.datetime):
+        timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d")
+    age_parsed = age.split(":")
+    days_diff = int(float(age_parsed[0]) * 30.437 + float(age_parsed[1]))
+    return timestamp - relativedelta.relativedelta(days=days_diff)
+
+
+class MailDomainException(Exception):
+    """If e-mail address does not have SJD domain."""
+
+    def __init__(self, email, domain):
+        msg = f"E-mail provided '{email}' does not have domain '{domain}'"
+        super().__init__(msg)
+
+
+class MailAddressException(win32.pywintypes.com_error):  # pylint: disable=no-member
+    """If e-mail address is not authorized in local Outlook app."""
+
+    def __init__(self, email):
+        msg = f"E-mail provided '{email}' is not authorized in local Outlook app'"
+        super().__init__(msg)
+
+
+def check_email_address(email: str):
+    """Check if e-mail address is authorized in local Outlook app.
+
+    Args:
+        email (str): Email address to check.
+    """  # pylint: disable=line-too-long
+    pythoncom.CoInitialize()  # pylint: disable=no-member
+    ol_app = win32.Dispatch("Outlook.Application")
+    ol_ns = ol_app.GetNameSpace("MAPI")
+    mail_item = ol_app.CreateItem(0)
+    try:
+        mail_item._oleobj_.Invoke(  # pylint: disable=protected-access
+            *(64209, 0, 8, 0, ol_ns.Accounts.Item(email))
+        )
+    except win32.pywintypes.com_error as e:  # pylint: disable=no-member
+        raise MailAddressException(email) from e
+
+
+def check_email_domain(email: str, target_domain: str = "sjd.es"):
+    """Assert that provided email has certain domain.
+
+    Args:
+        email (str): E-mail address provided.
+        target_domain (str, optional): Domain to find. Defaults to "sjd.es".
+
+    Raises:
+        MailDomainException: If e-mail address does not have target domain.
+    """
+    email_domain = email.split("@")[1]
+    if email_domain != target_domain:
+        raise MailDomainException(email, target_domain)
+
+
+def compose_email(data: dict) -> dict:
+    """Compose e-mail subject and body based on data dictionary
+
+    Args:
+        data (dict): Appointment and participant data to fill in the subject and body.
+
+    Returns:
+        dict: Dictionary with composed HTML subject and body.
+    """  # pylint: disable=line-too-long
+
+    data["subject"] = (
+        f"Appointment { data['appointment_id'] } ({ data['status'] }) | { data['study'] } (ID: { data['record_id'] }) - { data['date'] }"  # pylint: disable=line-too-long
+    )
+    data[
+        "body"
+    ] = f"""
+The appointment { data['appointment_id'] } (ID: { data['record_id'] }) from study { data['study'] } has been created or modified. Here are the details:
+<br><br>
+<table style="width:50%">
+    <tbody>
+        <tr>
+            <td>
+                <b>Appointment ID</b>
+            </td>
+            <td>
+                { data['appointment_id'] }
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Appointment date</b>
+            </td>
+            <td>
+                { data['date'] }
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Participant ID</b>
+            </td>
+            <td>
+                { data['record_id'] }
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Current status</b>
+            </td>
+            <td>
+                { data['status'] }
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Taxi</b>
+            </td>
+            <td>
+                { data['taxi_address'] }
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Taxi booked?</b>
+            </td>
+            <td>
+                { data['taxi_isbooked'] }
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <b>Notes</b>
+            </td>
+            <td>
+                { data['comments'] }
+            </td>
+        </tr>
+    </tbody>
+    </table>
+"""  # pylint: disable="line-too-long"
+    return data
+
+
+def send_email(
+    data: dict, email_from="gonzalo.garcia@sjd.es", email_to="gonzalo.garcia@sjd.es"
+):
+    """Send e-mail using Outlook.
+
+    Args:
+        data (dict): Dictionary with the subject, body, and other properties of the e-mail.
+        email_from (str, optional): E-mail address to send the e-mail from. Defaults to "gonzalo.garcia@sjd.es".
+        email_to (str, optional): E-mail address to send the e-mail to. . Defaults to "gonzalo.garcia@sjd.es".
+    """  # pylint: disable=line-too-long
+    check_email_domain(email_from)
+    check_email_domain(email_to)
+    composed = compose_email(data)
+    pythoncom.CoInitialize()  # pylint: disable=no-member
+
+    ol_app = win32.Dispatch("Outlook.Application")
+    ol_ns = ol_app.GetNameSpace("MAPI")
+    mail_item = ol_app.CreateItem(0)
+    mail_item.Subject = composed["subject"]
+    mail_item.BodyFormat = 1
+    mail_item.HTMLBody = composed["body"]
+    mail_item.To = email_to
+    mail_item._oleobj_.Invoke(  # pylint: disable=protected-access
+        *(64209, 0, 8, 0, ol_ns.Accounts.Item(email_from))
+    )
+    mail_item.Send()

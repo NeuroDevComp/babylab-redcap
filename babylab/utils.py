@@ -1,5 +1,5 @@
 """
-Util functions for the app
+Util functions for the app.
 """
 
 import os
@@ -8,8 +8,7 @@ from datetime import datetime
 import shutil
 import pandas as pd
 from pandas import DataFrame
-from babylab import models
-from babylab import calendar
+from babylab import api
 
 
 def format_percentage(x: float | int) -> str:
@@ -24,7 +23,7 @@ def format_percentage(x: float | int) -> str:
     Returns:
         str: Formatted percentage
     """  # pylint: disable=line-too-long
-    if x > 1 or x < 0:
+    if x > 100 or x < 0:
         raise ValueError(
             "`x` higher than or equal to zero, and lower than or equal to one"
         )
@@ -72,13 +71,13 @@ def format_df(
         for k in kdict:
             if k in data_dict:
                 x[col_name] = [data_dict[k][v] if v else "" for v in col_values]
-            if "lang" in col_name:
-                x[col_name] = ["" if v == "None" else v for v in x[col_name]]
-            if "exp" in col_name:
-                x[col_name] = [format_percentage(v) for v in col_values]
-            if "taxi_isbooked" in col_name:
-                pairs = zip(x["taxi_address"], x[col_name])
-                x[col_name] = [format_taxi_isbooked(a, i) for a, i in pairs]
+        if "lang" in col_name:
+            x[col_name] = ["" if v == "None" else v for v in x[col_name]]
+        if "exp" in col_name:
+            x[col_name] = [format_percentage(v) for v in col_values]
+        if "taxi_isbooked" in col_name:
+            pairs = zip(x["taxi_address"], x[col_name])
+            x[col_name] = [format_taxi_isbooked(a, i) for a, i in pairs]
     return x
 
 
@@ -114,19 +113,17 @@ def replace_labels(x: DataFrame | dict, data_dict: dict) -> DataFrame:
         pd.DataFrame: _description_
     """  # pylint: disable=line-too-long
     if isinstance(x, DataFrame):
-        x = format_df(x, data_dict)
+        return format_df(x, data_dict)
     if isinstance(x, dict):
-        x = format_dict(x, data_dict)
-    return x
+        return format_dict(x, data_dict)
+    return None
 
 
-def get_participants_table(
-    records: models.Records, data_dict: dict = None
-) -> DataFrame:
+def get_participants_table(records: api.Records, data_dict: dict = None) -> DataFrame:
     """Get participants table
 
     Args:
-        records (models.Records): REDCap records, as returned by ``api.Records``.
+        records (api.Records): REDCap records, as returned by ``api.Records``.
 
     Returns:
         pd.DataFrame: Table of partcicipants.
@@ -136,7 +133,6 @@ def get_participants_table(
         "age_now_months",
         "age_now_days",
         "sex",
-        "comments",
         "date_created",
         "date_updated",
     ]
@@ -146,8 +142,8 @@ def get_participants_table(
     new_age_months = []
     new_age_days = []
     for _, v in records.participants.records.items():
-        age = calendar.get_age(
-            birth_date=calendar.get_birth_date(
+        age = api.get_age(
+            birth_date=api.get_birth_date(
                 age=f"{v.data['age_now_months']}:{v.data['age_now_days']}"
             )
         )
@@ -157,12 +153,11 @@ def get_participants_table(
     df = records.participants.to_df()
     df["age_now_months"] = new_age_months
     df["age_now_days"] = new_age_days
-    df = replace_labels(df, data_dict)
-    return df
+    return replace_labels(df, data_dict)
 
 
 def get_appointments_table(
-    records: models.Records,
+    records: api.Records,
     data_dict: dict = None,
     ppt_id: str = None,
     study: str = None,
@@ -170,7 +165,7 @@ def get_appointments_table(
     """Get appointments table.
 
     Args:
-        records (models.Records): _description_
+        records (api.Records): _description_
 
     Returns:
         pd.DataFrame: Table of appointments.
@@ -199,7 +194,6 @@ def get_appointments_table(
                 "date_updated",
                 "taxi_address",
                 "taxi_isbooked",
-                "comments",
             ],
         )
 
@@ -212,15 +206,15 @@ def get_appointments_table(
             "age_now_months"
         ]
         age_now_days = records.participants.records[v.record_id].data["age_now_days"]
-        age_now = calendar.get_age(
-            birth_date=calendar.get_birth_date(age=f"{age_now_months}:{age_now_days}"),
+        age_now = api.get_age(
+            birth_date=api.get_birth_date(age=f"{age_now_months}:{age_now_days}"),
             timestamp=datetime.strptime(
                 records.participants.records[v.record_id].data["date_created"],
                 "%Y-%m-%d %H:%M:%S",
             ),
         )
-        age_apt = calendar.get_age(
-            birth_date=calendar.get_birth_date(
+        age_apt = api.get_age(
+            birth_date=api.get_birth_date(
                 age=f"{age_now_months}:{age_now_days}",
                 timestamp=datetime.strptime(
                     v.data["date"],
@@ -233,17 +227,17 @@ def get_appointments_table(
         new_age_apt_months.append(int(age_apt[0]))
         new_age_apt_days.append(int(age_apt[1]))
     df = apts.to_df()
+    df["appointment_id"] = df["id"]
     df["age_now_months"] = new_age_now_months
     df["age_now_days"] = new_age_now_days
     df["age_apt_months"] = new_age_apt_months
     df["age_apt_days"] = new_age_apt_days
 
-    df = replace_labels(df, data_dict)
-    return df
+    return replace_labels(df, data_dict)
 
 
 def get_questionnaires_table(
-    records: models.Records,
+    records: api.Records,
     data_dict: dict = None,
     ppt_id: str = None,
 ) -> DataFrame:
@@ -269,7 +263,6 @@ def get_questionnaires_table(
                 "lang3_exp",
                 "lang4",
                 "lang4_exp",
-                "comments",
             ],
         )
     df = quest.to_df()
@@ -316,7 +309,7 @@ def count_col(
     return counts
 
 
-def prepare_dashboard(records: models.Records = None, data_dict: dict = None):
+def prepare_dashboard(records: api.Records = None, data_dict: dict = None):
     """Prepare data for dashboard"""
     ppts = get_participants_table(records, data_dict=data_dict)
     apts = get_appointments_table(records, data_dict=data_dict)
@@ -354,7 +347,7 @@ def prepare_dashboard(records: models.Records = None, data_dict: dict = None):
     }
 
 
-def prepare_participants(records: models.Records = None, data_dict: dict = None):
+def prepare_participants(records: api.Records = None, data_dict: dict = None):
     """Prepare data for participants page"""
     df = get_participants_table(records, data_dict=data_dict)
     classes = "table table-hover table-responsive"
@@ -372,7 +365,6 @@ def prepare_participants(records: models.Records = None, data_dict: dict = None)
             "age_now_months",
             "age_now_days",
             "sex",
-            "comments",
             "date_created",
             "date_updated",
             "modify_button",
@@ -385,7 +377,6 @@ def prepare_participants(records: models.Records = None, data_dict: dict = None)
             "age_now_months": "Age (months)",
             "age_now_days": "Age (days)",
             "sex": "Sex",
-            "comments": "Comments",
             "date_created": "Added on",
             "date_updated": "Last updated",
             "modify_button": "",
@@ -398,9 +389,7 @@ def prepare_participants(records: models.Records = None, data_dict: dict = None)
     }
 
 
-def prepare_record_id(
-    ppt_id: str, records: models.Records = None, data_dict: dict = None
-):
+def prepare_record_id(ppt_id: str, records: api.Records = None, data_dict: dict = None):
     """Prepare record ID page"""
     data = records.participants.records[ppt_id].data
     for k, v in data.items():
@@ -434,7 +423,6 @@ def prepare_record_id(
             "taxi_address",
             "taxi_isbooked",
             "status",
-            "comments",
         ]
     ]
     df_appt = df_appt.rename(
@@ -448,7 +436,6 @@ def prepare_record_id(
             "taxi_address": "Taxi address",
             "taxi_isbooked": "Taxi booked",
             "status": "Status",
-            "comments": "Comments:",
         }
     )
     table_appt = df_appt.to_html(
@@ -518,7 +505,7 @@ def prepare_record_id(
 
 
 def prepare_appointments(
-    records: models.Records, data_dict: dict = None, study: str = None
+    records: api.Records, data_dict: dict = None, study: str = None
 ):
     """Prepare appointments page"""
     df = get_appointments_table(records, data_dict=data_dict, study=study)
@@ -553,7 +540,6 @@ def prepare_appointments(
             "date_updated",
             "taxi_address",
             "taxi_isbooked",
-            "comments",
             "modify_button",
         ]
     ]
@@ -570,7 +556,6 @@ def prepare_appointments(
             "date_updated": "Last updated",
             "taxi_address": "Taxi address",
             "taxi_isbooked": "Taxi booked",
-            "comments": "Comments",
             "modify_button": "",
         }
     )
@@ -586,7 +571,7 @@ def prepare_appointments(
     return {"table": table}
 
 
-def prepare_questionnaires(records: models.Records = None, data_dict: dict = None):
+def prepare_questionnaires(records: api.Records = None, data_dict: dict = None):
     """Prepare appointments page"""
     df = get_questionnaires_table(records, data_dict=data_dict)
     classes = "table table-hover"
@@ -649,7 +634,7 @@ def prepare_questionnaires(records: models.Records = None, data_dict: dict = Non
 
 
 def prepare_studies(
-    records: models.Records = None, data_dict: dict = None, study: str = None
+    records: api.Records = None, data_dict: dict = None, study: str = None
 ):
     """Prepare appointments page"""
     df = get_appointments_table(records, data_dict=data_dict, study=study)
@@ -669,7 +654,6 @@ def prepare_studies(
             "taxi_address",
             "taxi_isbooked",
             "status",
-            "comments",
         ]
     ]
     df = df.sort_values("date", ascending=False)
@@ -685,7 +669,6 @@ def prepare_studies(
             "taxi_address": "Taxi address",
             "taxi_isbooked": "Taxi booked",
             "status": "Appointment status",
-            "comments": "Comments",
         }
     )
 

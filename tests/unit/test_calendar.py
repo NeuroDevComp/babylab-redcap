@@ -7,15 +7,29 @@ from babylab import calendar as cal
 
 def test_get_age():
     """Test ``get_age``"""
+    # when only birth date is provided
     assert isinstance(cal.get_age("2024-05-01"), list)
     assert all(isinstance(d, int) for d in cal.get_age("2024-05-01"))
     assert len(cal.get_age("2024-05-01")) == 2
-    assert isinstance(cal.get_age("2024-05-01"), list)
 
+    # when birth date AND timestamp are provided
     assert isinstance(cal.get_age("2024-05-01", "2024-12-17"), list)
     assert all(isinstance(d, int) for d in cal.get_age("2024-05-01", "2024-12-17"))
     assert len(cal.get_age("2024-05-01", "2024-12-17")) == 2
-    assert isinstance(cal.get_age("2024-05-01", "2024-12-17"), list)
+
+    # when birth date is provided as datetime
+    assert isinstance(cal.get_age(datetime(2024, 5, 1)), list)
+    assert all(isinstance(d, int) for d in cal.get_age(datetime(2024, 5, 1)))
+    assert len(cal.get_age(datetime(2024, 5, 1))) == 2
+
+    # when birth date and timestamp are provided as datetimes
+    assert isinstance(cal.get_age(datetime(2024, 5, 1), datetime(2024, 12, 17)), list)
+    assert all(
+        isinstance(d, int)
+        for d in cal.get_age(datetime(2024, 5, 1), datetime(2024, 12, 17))
+    )
+    assert len(cal.get_age(datetime(2024, 5, 1), datetime(2024, 12, 17))) == 2
+
     assert all(d < 0 for d in cal.get_age("2025-05-01", "2024-12-17"))
     with pytest.raises(ValueError):
         cal.get_age("a2025-05-01")

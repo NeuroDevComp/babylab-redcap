@@ -1,4 +1,3 @@
-<!-- Navbar -->
 <nav class="navbar sticky-top navbar-expand-lg bg-dark border-bottom border-body" data-bs-theme="dark"">
   <div class=" container-fluid">
   <a class="navbar-brand" href="{{ url_for('index') }}">
@@ -14,17 +13,16 @@
         <a class="nav-link" href="{{ url_for('dashboard') }}"><i class="fas fa-rocket"></i>&nbsp;&nbsp;Dashboard</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('participants') }}"><i class="fa fa-user"></i>&nbsp;&nbsp;Participants</a>
+        <a class="nav-link" href="{{ url_for('ppt_all') }}"><i class="fa fa-user"></i>&nbsp;&nbsp;Participants</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('appointments') }}"><i
-            class="fa fa-calendar"></i>&nbsp;&nbsp;Appointments</a>
+        <a class="nav-link" href="{{ url_for('apt_all') }}"><i class="fa fa-calendar"></i>&nbsp;&nbsp;Appointments</a>
       </li>
       <li class="nav-item">
         <a class="nav-link" href="{{ url_for('studies') }}"><i class="fa fa-flask"></i>&nbsp;&nbsp;Studies</a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="{{ url_for('questionnaires') }}"><i
+        <a class="nav-link" href="{{ url_for('que_all') }}"><i
             class="fa-regular fa-clipboard"></i>&nbsp;&nbsp;Questionnaires</a>
       </li>
       <li class="nav-item">

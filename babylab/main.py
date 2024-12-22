@@ -17,19 +17,12 @@ from flask import (
     flash,
     send_file,
 )
-from babylab import models
 from babylab import api
 from babylab import utils
-from babylab import email
 
 app = Flask(__name__, template_folder="templates")
 app.config["API_KEY"] = "TOKEN"
 app.config["EMAIL"] = "EMAIL"
-app.secret_key = os.urandom(24)
-app.permanent_session_lifetime = datetime.timedelta(minutes=10)
-
-utils.clean_tmp("tmp")
-utils.clean_tmp("../tmp")
 
 
 def token_required(f):
@@ -59,10 +52,9 @@ def error_443(error):
 
 
 @app.route("/", methods=["GET", "POST"])
-@app.route("/index", methods=["GET", "POST"])
 def index(redcap_version: str = None):
     """Index page"""
-    if not redcap_version:
+    if redcap_version is None:
         redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if request.method == "POST":
         finput = request.form
@@ -78,12 +70,12 @@ def index(redcap_version: str = None):
 
 @app.route("/dashboard")
 @token_required
-def dashboard(records: models.Records = None, data: dict = None):
+def dashboard(records: api.Records = None, data: dict = None):
     """Dashboard page"""
     redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if records is None:
         try:
-            records = models.Records(token=app.config["API_KEY"])
+            records = api.Records(token=app.config["API_KEY"])
         except Exception:  # pylint: disable=broad-exception-caught
             return redirect(url_for("index", redcap_version=redcap_version))
     data_dict = api.get_data_dict(token=app.config["API_KEY"])
@@ -93,8 +85,8 @@ def dashboard(records: models.Records = None, data: dict = None):
 
 @app.route("/participants/", methods=["GET", "POST"])
 @token_required
-def participants(
-    records: models.Records = None,
+def ppt_all(
+    records: api.Records = None,
     data_dict: dict = None,
     ppt_id: str = None,
     ppt_options: list[str] = None,
@@ -102,7 +94,7 @@ def participants(
 ):
     """Participants database"""
     if records is None:
-        records = models.Records(token=app.config["API_KEY"])
+        records = api.Records(token=app.config["API_KEY"])
     data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_participants(records, data_dict=data_dict)
     if ppt_options is None:
@@ -112,17 +104,18 @@ def participants(
         ppt_options = [str(x) for x in ppt_options]
     if request.method == "POST":
         ppt_id = request.form["inputPptId"]
-        data_ppt = records.participants.records[ppt_id]
-        return render_template(
-            "participants.html",
-            data=data,
-            ppt_options=ppt_options,
-            data_dict=data_dict,
-            ppt_id=ppt_id,
-            data_ppt=data_ppt,
-        )
+        if ppt_id != "-- Select one --":
+            data_ppt = records.participants.records[ppt_id]
+            return render_template(
+                "ppt_all.html",
+                data=data,
+                ppt_options=ppt_options,
+                data_dict=data_dict,
+                ppt_id=ppt_id,
+                data_ppt=data_ppt,
+            )
     return render_template(
-        "participants.html",
+        "ppt_all.html",
         ppt_options=ppt_options,
         data=data,
         data_dict=data_dict,
@@ -133,21 +126,19 @@ def participants(
 
 @app.route("/participants/<string:ppt_id>")
 @token_required
-def record_id(
-    records: models.Records = None, ppt_id: str = None, data_dict: dict = None
-):
-    """Show the record_id for that participant"""
+def ppt(records: api.Records = None, ppt_id: str = None, data_dict: dict = None):
+    """Show the ppt_id for that participant"""
     if data_dict is None:
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
     redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if records is None:
         try:
-            records = models.Records(token=app.config["API_KEY"])
+            records = api.Records(token=app.config["API_KEY"])
         except Exception:  # pylint: disable=broad-exception-caught
             return redirect(url_for("index", redcap_version=redcap_version))
     data = utils.prepare_record_id(ppt_id, records, data_dict)
     return render_template(
-        "record_id.html",
+        "ppt.html",
         ppt_id=ppt_id,
         data=data,
     )
@@ -155,7 +146,7 @@ def record_id(
 
 @app.route("/participant_new", methods=["GET", "POST"])
 @token_required
-def participant_new(data_dict: dict = None):
+def ppt_new(data_dict: dict = None):
     """New participant page"""
     if data_dict is None:
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
@@ -201,18 +192,18 @@ def participant_new(data_dict: dict = None):
         )
         try:
             flash("Participant added!", "success")
-            return redirect(url_for("participants"))
+            return redirect(url_for("ppt_all"))
         except requests.exceptions.HTTPError as e:
             flash(f"Something went wrong! {e}", "error")
-            return redirect(url_for("participant_new", data_dict=data_dict))
-    return render_template("participant_new.html", data_dict=data_dict)
+            return redirect(url_for("ppt_new", data_dict=data_dict))
+    return render_template("ppt_new.html", data_dict=data_dict)
 
 
-@app.route("/participants/<string:ppt_id>/participant_modify", methods=["GET", "POST"])
+@app.route("/participants/<string:ppt_id>/ppt_mod", methods=["GET", "POST"])
 @token_required
-def participant_modify(
+def ppt_modify(
     ppt_id: str,
-    records: models.Records = None,
+    records: api.Records = None,
     data: dict = None,
     data_dict: dict = None,
 ):
@@ -221,9 +212,7 @@ def participant_modify(
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         data = (
-            models.Records(token=app.config["API_KEY"])
-            .participants.records[ppt_id]
-            .data
+            api.Records(token=app.config["API_KEY"]).participants.records[ppt_id].data
         )
     if request.method == "POST":
         finput = request.form
@@ -266,39 +255,37 @@ def participant_modify(
                 modifying=True,
                 token=app.config["API_KEY"],
             )
-            return redirect(url_for("record_id", ppt_id=ppt_id))
+            return redirect(url_for("ppt", ppt_id=ppt_id))
         except requests.exceptions.HTTPError as e:
             flash(f"Something went wrong! {e}", "error")
             return render_template(
-                "participant_modify.html", ppt_id=ppt_id, data=data, data_dict=data_dict
+                "ppt_modify.html", ppt_id=ppt_id, data=data, data_dict=data_dict
             )
     return render_template(
-        "participant_modify.html", ppt_id=ppt_id, data=data, data_dict=data_dict
+        "ppt_modify.html", ppt_id=ppt_id, data=data, data_dict=data_dict
     )
 
 
 @app.route("/appointments/")
 @token_required
-def appointments(records: models.Records = None, data_dict: dict = None):
+def apt_all(records: api.Records = None, data_dict: dict = None):
     """Appointments database"""
     if records is None:
-        records = models.Records(token=app.config["API_KEY"])
+        records = api.Records(token=app.config["API_KEY"])
     data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_appointments(records, data_dict=data_dict)
-    return render_template("appointments.html", data=data)
+    return render_template("apt_all.html", data=data)
 
 
 @app.route("/appointments/<string:appt_id>")
 @token_required
-def appointment_id(
-    records: models.Records = None, appt_id: str = None, data_dict: dict = None
-):
+def apt(records: api.Records = None, appt_id: str = None, data_dict: dict = None):
     """Show the record_id for that appointment"""
     if data_dict is None:
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         try:
-            records = models.Records(token=app.config["API_KEY"])
+            records = api.Records(token=app.config["API_KEY"])
         except Exception:  # pylint: disable=broad-exception-caught
             return render_template("index.html", login_status="incorrect")
     data = records.appointments.records[appt_id].data
@@ -312,9 +299,9 @@ def appointment_id(
     participant["age_now_months"] = str(participant["age_now_months"])
     participant["age_now_days"] = str(participant["age_now_days"])
     return render_template(
-        "appointment_id.html",
+        "apt.html",
         appt_id=appt_id,
-        ppt_id=data["record_id"],
+        ppt_id=data["ppt"],
         data=data,
         participant=participant,
     )
@@ -322,7 +309,7 @@ def appointment_id(
 
 @app.route("/participants/<string:ppt_id>/appointment_new", methods=["GET", "POST"])
 @token_required
-def appointment_new(ppt_id: str, data_dict: dict = None):
+def apt_new(ppt_id: str, data_dict: dict = None):
     """New appointment page"""
     if data_dict is None:
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
@@ -349,7 +336,7 @@ def appointment_new(ppt_id: str, data_dict: dict = None):
         try:
             api.add_appointment(data, token=app.config["API_KEY"])
             flash("Appointment added!", "success")
-            records = models.Records(token=app.config["API_KEY"])
+            records = api.Records(token=app.config["API_KEY"])
             appt_id = list(records.participants.records[ppt_id].appointments.records)[
                 -1
             ]
@@ -367,30 +354,24 @@ def appointment_new(ppt_id: str, data_dict: dict = None):
             }
             data = utils.replace_labels(email_data, data_dict)
             if app.config["EMAIL"]:
-                email.send_email(data=email_data, email_from=app.config["EMAIL"])
-            return redirect(url_for("appointments", records=records))
+                api.send_email(data=email_data, email_from=app.config["EMAIL"])
+            return redirect(url_for("apt_all", records=records))
         except requests.exceptions.HTTPError as e:
             flash(f"Something went wrong! {e}", "error")
-            return render_template(
-                "appointment_new.html", ppt_id=ppt_id, data_dict=data_dict
-            )
-        except email.MailDomainException as e:
+            return render_template("apt_new.html", ppt_id=ppt_id, data_dict=data_dict)
+        except api.MailDomainException as e:
             flash(
                 f"Appointment modified successfully, but e-mail was not sent: {e}",
                 "warning",
             )
-            return render_template(
-                "appointment_new.html", ppt_id=ppt_id, data_dict=data_dict
-            )
-        except email.MailAddressException as e:
+            return render_template("apt_new.html", ppt_id=ppt_id, data_dict=data_dict)
+        except api.MailAddressException as e:
             flash(
                 f"Appointment modified successfully, but e-mail was not sent: {e}",
                 "warning",
             )
-            return render_template(
-                "appointment_new.html", ppt_id=ppt_id, data_dict=data_dict
-            )
-    return render_template("appointment_new.html", ppt_id=ppt_id, data_dict=data_dict)
+            return render_template("apt_new.html", ppt_id=ppt_id, data_dict=data_dict)
+    return render_template("apt_new.html", ppt_id=ppt_id, data_dict=data_dict)
 
 
 @app.route(
@@ -398,10 +379,10 @@ def appointment_new(ppt_id: str, data_dict: dict = None):
     methods=["GET", "POST"],
 )
 @token_required
-def appointment_modify(
+def apt_modify(
     appt_id: str,
     ppt_id: str,
-    records: models.Records = None,
+    records: api.Records = None,
     data_dict: dict = None,
 ):
     """Modify appointment page"""
@@ -409,9 +390,7 @@ def appointment_modify(
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         data = (
-            models.Records(token=app.config["API_KEY"])
-            .appointments.records[appt_id]
-            .data
+            api.Records(token=app.config["API_KEY"]).appointments.records[appt_id].data
         )
         for k, v in data.items():
             dict_key = "appointment_" + k
@@ -454,32 +433,28 @@ def appointment_modify(
             }
             data = utils.replace_labels(email_data, data_dict)
             if app.config["EMAIL"]:
-                email.send_email(data=email_data, email_from=app.config["EMAIL"])
+                api.send_email(data=email_data, email_from=app.config["EMAIL"])
             flash("Appointment modified!", "success")
-            return redirect(url_for("appointments"))
+            return redirect(url_for("apt_all"))
         except requests.exceptions.HTTPError as e:
             flash(f"Something went wrong! {e}", "error")
             return render_template(
                 "appointment_new.html", ppt_id=ppt_id, data_dict=data_dict
             )
-        except email.MailDomainException as e:
+        except api.MailDomainException as e:
             flash(
                 f"Appointment modified successfully, but e-mail was not sent: {e}",
                 "warning",
             )
-            return render_template(
-                "appointment_new.html", ppt_id=ppt_id, data_dict=data_dict
-            )
-        except email.MailAddressException as e:
+            return render_template("apt_new.html", ppt_id=ppt_id, data_dict=data_dict)
+        except api.MailAddressException as e:
             flash(
                 f"Appointment modified successfully, but e-mail was not sent: {e}",
                 "warning",
             )
-            return render_template(
-                "appointment_new.html", ppt_id=ppt_id, data_dict=data_dict
-            )
+            return render_template("apt_new.html", ppt_id=ppt_id, data_dict=data_dict)
     return render_template(
-        "appointment_modify.html",
+        "apt_modify.html",
         ppt_id=ppt_id,
         appt_id=appt_id,
         data=data,
@@ -490,7 +465,7 @@ def appointment_modify(
 @app.route("/studies", methods=["GET", "POST"])
 @token_required
 def studies(
-    records: models.Records = None,
+    records: api.Records = None,
     selected_study: str = None,
     data: dict = None,
 ):
@@ -503,7 +478,7 @@ def studies(
         redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
         if records is None:
             try:
-                records = models.Records(token=app.config["API_KEY"])
+                records = api.Records(token=app.config["API_KEY"])
             except Exception:  # pylint: disable=broad-exception-caught
                 return redirect(url_for("index", redcap_version=redcap_version))
 
@@ -520,19 +495,19 @@ def studies(
 
 @app.route("/questionnaires/")
 @token_required
-def questionnaires(records: models.Records = None, data_dict: dict = None):
+def que_all(records: api.Records = None, data_dict: dict = None):
     """Participants database"""
     if records is None:
-        records = models.Records(token=app.config["API_KEY"])
+        records = api.Records(token=app.config["API_KEY"])
     data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = utils.prepare_questionnaires(records, data_dict=data_dict)
-    return render_template("questionnaires.html", data=data, data_dict=data_dict)
+    return render_template("que_all.html", data=data, data_dict=data_dict)
 
 
 @app.route("/participants/<string:ppt_id>/questionnaires/<string:quest_id>")
 @token_required
-def questionnaire_id(
-    records: models.Records = None,
+def que(
+    records: api.Records = None,
     ppt_id: str = None,
     quest_id: str = None,
     data: dict = None,
@@ -541,7 +516,7 @@ def questionnaire_id(
     data_dict = api.get_data_dict(token=app.config["API_KEY"])
     if records is None:
         try:
-            records = models.Records(token=app.config["API_KEY"])
+            records = api.Records(token=app.config["API_KEY"])
         except Exception:  # pylint: disable=broad-exception-caught
             return render_template("index.html", login_status="incorrect")
     data = records.questionnaires.records[quest_id].data
@@ -552,7 +527,7 @@ def questionnaire_id(
         else "<div style='color: green'>Calculated</div>"
     )
     return render_template(
-        "questionnaire_id.html",
+        "que.html",
         ppt_id=ppt_id,
         quest_id=quest_id,
         data=data,
@@ -564,7 +539,7 @@ def questionnaire_id(
     methods=["GET", "POST"],
 )
 @token_required
-def questionnaire_new(ppt_id: str, data_dict: dict = None):
+def que_new(ppt_id: str, data_dict: dict = None):
     """New langage questionnaire page"""
     if data_dict is None:
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
@@ -605,11 +580,11 @@ def questionnaire_new(ppt_id: str, data_dict: dict = None):
         )
         try:
             flash("Questionnaire added!", "success")
-            return redirect(url_for("questionnaires"))
+            return redirect(url_for("que_all"))
         except requests.exceptions.HTTPError as e:
             flash(f"Something went wrong! {e}", "error")
-            return redirect(url_for("questionnaires"))
-    return render_template("questionnaire_new.html", ppt_id=ppt_id, data_dict=data_dict)
+            return redirect(url_for("que_all"))
+    return render_template("que_new.html", ppt_id=ppt_id, data_dict=data_dict)
 
 
 @app.route(
@@ -617,7 +592,7 @@ def questionnaire_new(ppt_id: str, data_dict: dict = None):
     methods=["GET", "POST"],
 )
 @token_required
-def questionnaire_modify(
+def que_modify(
     quest_id: str,
     ppt_id: str,
     data_dict: dict = None,
@@ -626,9 +601,7 @@ def questionnaire_modify(
     if data_dict is None:
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
     data = (
-        models.Records(token=app.config["API_KEY"])
-        .questionnaires.records[quest_id]
-        .data
+        api.Records(token=app.config["API_KEY"]).questionnaires.records[quest_id].data
     )
     for k, v in data.items():
         if "exp" in k:
@@ -661,12 +634,12 @@ def questionnaire_modify(
                 token=app.config["API_KEY"],
             )
             flash("Questionnaire modified!", "success")
-            return redirect(url_for("questionnaires"))
+            return redirect(url_for("que_all"))
         except requests.exceptions.HTTPError as e:
             flash(f"Something went wrong! {e}", "error")
-            return render_template("questionnaires.html", ppt_id=ppt_id)
+            return render_template("que_all.html", ppt_id=ppt_id)
     return render_template(
-        "questionnaire_modify.html",
+        "que_modify.html",
         ppt_id=ppt_id,
         quest_id=quest_id,
         data=data,
@@ -679,12 +652,12 @@ def questionnaire_modify(
     methods=["GET", "POST"],
 )
 @token_required
-def other(records: models.Records = None):
+def other(records: api.Records = None):
     """Other pages"""
     redcap_version = api.get_redcap_version(token=app.config["API_KEY"])
     if records is None:
         try:
-            records = models.Records(token=app.config["API_KEY"])
+            records = api.Records(token=app.config["API_KEY"])
         except Exception:  # pylint: disable=broad-exception-caught
             return redirect(url_for("index", redcap_version=redcap_version))
     fname = datetime.datetime.strftime(

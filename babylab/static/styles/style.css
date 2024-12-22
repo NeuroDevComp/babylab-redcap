@@ -118,9 +118,6 @@
     font-style: italic;
 }
 
-body {
-    font-family: "Ciutadella Regular";
-}
 
 p,
 input,
@@ -175,19 +172,27 @@ i {
     float: left;
     width: 30%;
     margin: 1em;
+    text-wrap: pretty;
+    word-break: break-all;
 }
 
 .card-table {
     margin: 1em;
     float: left;
     vertical-align: middle;
+    text-wrap: pretty;
+    word-break: normal;
 }
 
-
+.tdbreak {
+    word-break: break-all
+}
 
 td {
     vertical-align: text-bottom;
+    word-wrap: break-word;
 }
+
 
 .nav-link {
     font-family: "Ciutadella Regular";
