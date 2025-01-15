@@ -222,12 +222,15 @@ def replace_labels(x: DataFrame | dict, data_dict: dict) -> DataFrame:
     return None
 
 
-def get_participants_table(records: api.Records, data_dict: dict) -> DataFrame:
+def get_participants_table(
+    records: api.Records, data_dict: dict, n: int = None
+) -> DataFrame:
     """Get participants table
 
     Args:
         records (api.Records): REDCap records, as returned by ``api.Records``.
         data_dict (dict, optional): Data dictionary as returned by ``api.get_data_dictionary``.
+        n (int, optional): Number of records to show. Defaults to None (all records are shown).
 
     Returns:
         DataFrame: Table of partcicipants.
@@ -257,6 +260,8 @@ def get_participants_table(records: api.Records, data_dict: dict) -> DataFrame:
     df = records.participants.to_df()
     df["age_now_months"] = new_age_months
     df["age_now_days"] = new_age_days
+    if n:
+        df = df.tail(n)
     return replace_labels(df, data_dict)
 
 
@@ -308,6 +313,7 @@ def get_appointments_table(
     data_dict: dict = None,
     ppt_id: str = None,
     study: str = None,
+    n: int = None,
 ) -> DataFrame:
     """Get appointments table.
 
@@ -316,6 +322,7 @@ def get_appointments_table(
         data_dict (dict): Data dictionary as returned by ``api.get_data_dictionary``.
         ppt_id (str, optional): Participant ID. Defaults to None.
         study (str, optional): Study to filter for. Defaults to None.
+        n (int, optional): Number of records to show. Defaults to None (all records are shown).
 
     Returns:
         DataFrame: Table of appointments.
@@ -353,15 +360,16 @@ def get_appointments_table(
     df["appointment_id"] = df["id"]
 
     # get current age
-    age_now = get_age_timestamp(apt_records, ppt_records, "date_created")
+    age_now = get_age_timestamp(apt_records, ppt_records, "date_created")[:n]
     df["age_now_months"] = age_now[0]
     df["age_now_days"] = age_now[1]
 
     # get age at appointment
-    age_apt = get_age_timestamp(apt_records, ppt_records, "date")
+    age_apt = get_age_timestamp(apt_records, ppt_records, "date")[:n]
     df["age_apt_months"] = age_apt[0]
     df["age_apt_days"] = age_apt[1]
-
+    if n:
+        df = df.tail(n)
     return replace_labels(df, data_dict)
 
 
@@ -369,6 +377,7 @@ def get_questionnaires_table(
     records: api.Records,
     data_dict: dict,
     ppt_id: str = None,
+    n: int = None,
 ) -> DataFrame:
     """Get questionnaires table.
 
@@ -377,6 +386,7 @@ def get_questionnaires_table(
         data_dict (dict): Data dictionary as returned by ``api.get_data_dictionary``.
         ppt_id (str, optional): Participant ID. Defaults to None.
         study (str, optional): Study to filter for. Defaults to None.
+        n (int, optional): Number of records to show. Defaults to None (all records are shown).
 
     Returns:
         DataFrame: A formated Pandas DataFrame.
@@ -410,7 +420,8 @@ def get_questionnaires_table(
         str(p) + ":" + str(q) for p, q in zip(df.index, df["redcap_repeat_instance"])
     ]
     df = replace_labels(df, data_dict)
-
+    if n:
+        df = df.tail(n)
     return df
 
 
@@ -445,19 +456,22 @@ def count_col(
     return counts
 
 
-def prepare_dashboard(records: api.Records = None, data_dict: dict = None) -> dict:
+def prepare_dashboard(
+    records: api.Records = None, data_dict: dict = None, **kwargs
+) -> dict:
     """Prepare data for dashboard.
 
     Args:
         records (api.Records): REDCap records, as returned by ``api.Records``.
         data_dict (dict, optional): Data dictionary as returned by ``api.get_data_dictionary``. Defaults to None.
+        **kwargs: Extra arguments passed to ``get_participants_table``, ``get_appointments_table``, and ``get_questionnaires_table``
 
     Returns:
         dict: Parameters for the dashboard endpoint.
     """  # pylint: disable=line-too-long
-    ppts = get_participants_table(records, data_dict=data_dict)
-    apts = get_appointments_table(records, data_dict=data_dict)
-    quest = get_questionnaires_table(records, data_dict=data_dict)
+    ppts = get_participants_table(records, data_dict=data_dict, **kwargs)
+    apts = get_appointments_table(records, data_dict=data_dict, **kwargs)
+    quest = get_questionnaires_table(records, data_dict=data_dict, **kwargs)
     ppts["age_days"] = round(
         ppts["age_now_days"] + (ppts["age_now_months"] * 30.437), None
     ).astype(int)
@@ -494,17 +508,18 @@ def prepare_dashboard(records: api.Records = None, data_dict: dict = None) -> di
     }
 
 
-def prepare_participants(records: api.Records, data_dict: dict) -> dict:
+def prepare_participants(records: api.Records, data_dict: dict, **kwargs) -> dict:
     """Prepare data for participants page.
 
     Args:
         records (api.Records): REDCap records, as returned by ``api.Records``.
         data_dict (dict): Data dictionary as returned by ``api.get_data_dictionary``.
+        **kwargs: Extra arguments passed to ``get_participants_table``.
 
     Returns:
         dict: Parameters for the participants endpoint.
     """  # pylint: disable=line-too-long
-    df = get_participants_table(records, data_dict=data_dict)
+    df = get_participants_table(records, data_dict=data_dict, **kwargs)
     classes = "table table-hover table-responsive"
     df["record_id"] = [format_ppt_id(i) for i in df.index]
     df.index = df.index.astype(int)
@@ -541,13 +556,16 @@ def prepare_participants(records: api.Records, data_dict: dict) -> dict:
     }
 
 
-def prepare_record_id(records: api.Records, data_dict: dict, ppt_id: str) -> dict:
+def prepare_record_id(
+    records: api.Records, data_dict: dict, ppt_id: str, **kwargs
+) -> dict:
     """Prepare record ID page.
 
     Args:
         records (api.Records): REDCap records, as returned by ``api.Records``.
         data_dict (dict): Data dictionary as returned by ``api.get_data_dictionary``.
         ppt_id (str, optional): Participant ID. Defaults to None.
+        **kwargs: Extra arguments passed to ``get_participants_table``, ``get_appointments_table``, and ``get_questionnaires_table``
 
     Returns:
         dict: Parameters for the participants endpoint.
@@ -567,7 +585,9 @@ def prepare_record_id(records: api.Records, data_dict: dict, ppt_id: str) -> dic
     classes = "table table-hover table-responsive"
 
     # prepare participants table
-    df_appt = get_appointments_table(records, data_dict=data_dict, ppt_id=ppt_id)
+    df_appt = get_appointments_table(
+        records, data_dict=data_dict, ppt_id=ppt_id, **kwargs
+    )
     df_appt["record_id"] = [format_ppt_id(i) for i in df_appt.index]
     df_appt["appointment_id"] = [format_apt_id(i) for i in df_appt["appointment_id"]]
     df_appt = df_appt.sort_values(by="date", ascending=False)
@@ -662,7 +682,7 @@ def prepare_record_id(records: api.Records, data_dict: dict, ppt_id: str) -> dic
 
 
 def prepare_appointments(
-    records: api.Records, data_dict: dict = None, study: str = None
+    records: api.Records, data_dict: dict = None, study: str = None, **kwargs
 ):
     """Prepare record ID page.
 
@@ -670,11 +690,12 @@ def prepare_appointments(
         records (api.Records): REDCap records, as returned by ``api.Records``.
         data_dict (dict): Data dictionary as returned by ``api.get_data_dictionary``.
         study (str, optional): Study to filter for. Defaults to None.
+        **kwargs: Extra arguments passed to ``get_participants_table``, ``get_appointments_table``, and ``get_questionnaires_table``
 
     Returns:
         dict: Parameters for the participants endpoint.
     """  # pylint: disable=line-too-long
-    df = get_appointments_table(records, data_dict=data_dict, study=study)
+    df = get_appointments_table(records, data_dict=data_dict, study=study, **kwargs)
     classes = "table table-hover table-responsive"
     df["record_id"] = [format_ppt_id(i) for i in df.index]
     df["modify_button"] = [
@@ -725,17 +746,18 @@ def prepare_appointments(
     return {"table": table}
 
 
-def prepare_questionnaires(records: api.Records, data_dict: dict):
+def prepare_questionnaires(records: api.Records, data_dict: dict, **kwargs):
     """Prepare appointments page.
 
     Args:
         records (api.Records): REDCap records, as returned by ``api.Records``.
         data_dict (dict): Data dictionary as returned by ``api.get_data_dictionary``.
+        **kwargs: Extra arguments passed to ``get_participants_table``, ``get_appointments_table``, and ``get_questionnaires_table``
 
     Returns:
         dict: Parameters for the participants endpoint.
     """  # pylint: disable=line-too-long
-    df = get_questionnaires_table(records, data_dict=data_dict)
+    df = get_questionnaires_table(records, data_dict=data_dict, **kwargs)
     classes = "table table-hover"
     df["modify_button"] = [
         format_modify_button(p, ques_id=q)  # pylint: disable=line-too-long

@@ -16,8 +16,13 @@ def questionnaires_routes(app):
         """Participants database"""
         records = api.Records(token=app.config["API_KEY"])
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
-        data = utils.prepare_questionnaires(records, data_dict=data_dict)
-        return render_template("que_all.html", data=data, data_dict=data_dict)
+        data = utils.prepare_questionnaires(records, data_dict=data_dict, n=20)
+        return render_template(
+            "que_all.html",
+            data=data,
+            data_dict=data_dict,
+            n_que=len(records.questionnaires.records),
+        )
 
     @app.route(
         "/participants/<string:ppt_id>/questionnaires/<string:que_id>",

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Display:ital,wght@0,100..900;1,100..900&display=swap');
+
 @font-face {
     font-family: 'Ciutadella Italic';
     font-style: italic;
@@ -137,9 +139,13 @@ li,
 input,
 a,
 .form-control,
-.form-select,
-.navbar-brand:h3 {
+.form-select {
     font-family: "Ciutadella Regular";
+}
+
+nav,
+.navbar-brand:h3 {
+    font-family: "Radio Canada";
 }
 
 i {
@@ -148,7 +154,9 @@ i {
 
 .card-header {
     background-color: rgb(227, 227, 227);
-    font-family: "Ciutadella SemiBold";
+    font-family: "Noto Sans Display";
+    font-weight: bold;
+    text-align: center;
 }
 
 .card-title {
@@ -209,7 +217,7 @@ td {
 
 .nav-link {
     color: white;
-    font-family: "Ciutadella Regular";
+    font-family: "Noto Sans Display";
     margin-left: 0.5em;
 }
 
@@ -218,7 +226,7 @@ td {
 #pills-appointments-tab,
 #pills-questionnaires-tab {
     color: rgb(115, 115, 115);
-    font-family: "Ciutadella Regular";
+    font-family: "Noto Sans Display";
     margin-left: 0.5em;
 }
 

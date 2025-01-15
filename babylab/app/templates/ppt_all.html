@@ -4,7 +4,7 @@
   <div class="jumbotron jumbotron-fluid">
     <div class="container">
       <h1 class="display-4">Participants</h1>
-      <p class="lead">Showing all participants in database.</p>
+      <p class="lead">There is a total of {{ n_ppt }} participants in the database.</p>
     </div>
   </div>
   <hr class="my-4">
@@ -215,7 +215,8 @@
       <div class="card card-table">
         <div class="card-body">
           <h5 class="card-title">Participants</h5>
-          <h6 class="card-subtitle mb-2 text-muted">Click IDs to see a participant's profile</h6>
+          <h6 class="card-subtitle mb-2 text-muted">Showing the last added 20 participants in database. Click IDs to see
+            a participant's profile.</h6>
           <div class="card-text" width="10%">{{ data["table"]|safe }}</div>
         </div>
       </div>

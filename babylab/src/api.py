@@ -186,7 +186,7 @@ def delete_participant(data: dict, **kwargs):
         "action": "delete",
         "returnFormat": "json",
         "instrument": "",
-        f"records[{data['record_id']}]": f"{data['record_id']}",
+        "records[0]": f"{data['record_id']}",
     }
     return post_request(fields=fields, **kwargs)
 

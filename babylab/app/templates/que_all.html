@@ -4,7 +4,7 @@
   <div class="jumbotron jumbotron-fluid">
     <div class="container">
       <h1 class="display-4">Language questionnaires</h1>
-      <p class="lead">Showing all language questionnaires in database.</p>
+      <p class="lead">There is a total of {{ n_que }} language questionnaires in the database.</p>
     </div>
   </div>
   <hr class="my-4">
@@ -17,7 +17,8 @@
   <div class="card-table">
     <h5 class="card-title">Language questionnaires</h5>
     <div class="card-body">
-      <h6 class="card-subtitle mb-2 text-muted">Click IDs to see a language questionnaire details</h6>
+      <h6 class="card-subtitle mb-2 text-muted">Showing the last 20 language questionnaires in database. Click IDs to
+        see a language questionnaire details.</h6>
       <div width="10%">{{ data["table"]|safe }}</div>
     </div>
   </div>

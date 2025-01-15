@@ -21,7 +21,7 @@ def participants_routes(app):
         token = app.config["API_KEY"]
         records = conf.get_records_or_index(token=token)
         data_dict = api.get_data_dict(token=token)
-        data = utils.prepare_participants(records, data_dict=data_dict)
+        data = utils.prepare_participants(records, data_dict=data_dict, n=20)
         if ppt_options is None:
             ppt_options = list(records.participants.to_df().index)
             ppt_options = [int(x) for x in ppt_options]
@@ -46,6 +46,7 @@ def participants_routes(app):
             data_dict=data_dict,
             ppt_id=ppt_id,
             data_ppt=data_ppt,
+            n_ppt=len(records.participants.records),
         )
 
     @app.route("/participants/<string:ppt_id>", methods=["GET", "POST"])

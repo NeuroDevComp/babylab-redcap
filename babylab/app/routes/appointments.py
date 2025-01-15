@@ -17,8 +17,12 @@ def appointments_routes(app):
         token = app.config["API_KEY"]
         records = api.Records(token=token)
         data_dict = api.get_data_dict(token=token)
-        data = utils.prepare_appointments(records, data_dict=data_dict)
-        return render_template("apt_all.html", data=data)
+        data = utils.prepare_appointments(records, data_dict=data_dict, n=20)
+        return render_template(
+            "apt_all.html",
+            data=data,
+            n_apt=len(records.appointments.records),
+        )
 
     @app.route("/appointments/<string:apt_id>", methods=["GET", "POST"])
     @conf.token_required

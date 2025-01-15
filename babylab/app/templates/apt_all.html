@@ -4,7 +4,7 @@
   <div class="jumbotron jumbotron-fluid">
     <div class="container">
       <h1 class="display-4">Appointments</h1>
-      <p class="lead">Showing all appointments in database.</p>
+      <p class="lead">There is a total of {{ n_apt }} appointments in the database.</p>
     </div>
   </div>
   <hr class="my-4">
@@ -14,7 +14,8 @@
   <div class="card">
     <h5 class="card-title">Appointments</h5>
     <div class="card-body">
-      <h6 class="card-subtitle mb-2 text-muted">Click IDs to see appointment details</h6>
+      <h6 class="card-subtitle mb-2 text-muted">Showing the last 20 appointments in database. Click IDs to see
+        appointment details.</h6>
       {{ data["table"]|safe }}
     </div>
   </div>
