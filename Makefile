@@ -54,3 +54,9 @@ version-major:
 	git commit -m $versionWithV
 	git tag -l "$versionWithV"
 	git push
+
+docker-build:
+	docker build --tag babylab-redcap .
+
+docker-run:
+	docker run -d -p 5000:5000 babylab-redcap
