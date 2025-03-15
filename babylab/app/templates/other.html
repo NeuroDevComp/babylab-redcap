@@ -88,20 +88,57 @@
                     <br>
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="units-addon">Units</span>
-                        <select id="units" class="form-select" aria-describedby="units-addon" aria-label="Select units">
+                        <select id="units1" class="form-select" aria-describedby="units-addon"
+                            aria-label="Select units">
                             <option value="md" selected>Months and days</option>
                             <option value="hm">Hours and minutes</option>
                         </select>
                         <br>
                     </div>
-                    <button type="button" class="btn btn-dark" onclick="calculate()">Calculate</button>
+                    <button type="button" class="btn btn-dark" onclick="calculate1()">Calculate</button>
                 </div>
-                <div class="card-footer" id="result-footer">
-                    <span id="result"></span>
+                <div class="card-footer" id="result1-footer">
+                    <span id="result1"></span>
                 </div>
             </div>
         </div>
         <div class="col">
+            <div class="card text-center">
+                <div class="card-header">
+                    Age calculator&nbsp;&nbsp;<i class="fa fa-calculator"></i>
+                </div>
+                <div class="card-body">
+                    <div class="input-group date">
+                        <span class="input-group-text" id="date1-label">Timestamp</span>
+                        <input type="datetime-local" id="timestamp" name="timestamp" />
+                    </div>
+                    <br>
+                    <div class="row">
+                        <div class="col">
+                            <label id="months-label">Months</label>
+                            <input class="form-control" type="number" id="months" name="months" value="0" />
+                        </div>
+                        <div class="col">
+                            <label id="days-label">Days</label>
+                            <input class="form-control" type="number" id="days" name="days" value="0" />
+                        </div>
+                    </div>
+                    <br>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="units-addon">Units</span>
+                        <select id="units2" class="form-select" aria-describedby="units-addon"
+                            aria-label="Select units">
+                            <option value="md" selected>Months and days</option>
+                            <option value="hm">Hours and minutes</option>
+                        </select>
+                        <br>
+                    </div>
+                    <button type="button" class="btn btn-dark" onclick="calculate2()">Calculate</button>
+                </div>
+                <div class="card-footer" id="result2-footer">
+                    <span id="result2"></span>
+                </div>
+            </div>
         </div>
         <div class="col">
         </div>
@@ -110,17 +147,34 @@
     <script type="text/javascript">
         let today = new Date()
         today.setSeconds(0, 0);
+
         document.getElementById("date1").valueAsDate = today;
         document.getElementById("date2").valueAsDate = today;
-        document.getElementById("result-footer").style.display = "none"
-        function calculate() {
+        document.getElementById("result1-footer").style.display = "none"
+        document.getElementById("timestamp").valueAsDate = today;
+        document.getElementById("months").value = 0;
+        document.getElementById("days").value = 0;
+        document.getElementById("result2-footer").style.display = "none"
+
+        function calculate1() {
             result = get_age(
                 document.getElementById("date1").value,
                 document.getElementById("date2").value,
-                units = document.getElementById("units").value,
+                units = document.getElementById("units1").value,
             )
-            document.getElementById("result-footer").style.display = "block"
-            document.getElementById("result").textContent = result
+            document.getElementById("result1-footer").style.display = "block"
+            document.getElementById("result1").textContent = result
+        }
+
+        function calculate2() {
+            result = get_current_age(
+                document.getElementById("timestamp").value,
+                document.getElementById("months").value,
+                document.getElementById("days").value,
+                units = document.getElementById("units2").value,
+            )
+            document.getElementById("result2-footer").style.display = "block"
+            document.getElementById("result2").textContent = result
         }
     </script>
 </div>
