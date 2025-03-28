@@ -7,7 +7,7 @@ from babylab.src import api, utils
 from babylab.app import config as conf
 
 
-def prepare_participants(records: api.Records, data_dict: dict, **kwargs) -> dict:
+def prepare_ppt(records: api.Records, data_dict: dict, **kwargs) -> dict:
     """Prepare data for participants page.
 
     Args:
@@ -18,17 +18,17 @@ def prepare_participants(records: api.Records, data_dict: dict, **kwargs) -> dic
     Returns:
         dict: Parameters for the participants endpoint.
     """  # pylint: disable=line-too-long
-    df = utils.get_participants_table(records, data_dict=data_dict, **kwargs)
+    df = utils.get_ppt_table(records, data_dict=data_dict, **kwargs)
     classes = "table table-hover table-responsive"
-    df["record_id"] = [utils.format_ppt_id(i) for i in df.index]
+    df["record_id"] = [utils.fmt_ppt_id(i) for i in df.index]
     df.index = df.index.astype(int)
     df = df.sort_index(ascending=False)
     df["buttons"] = [
-        utils.format_modify_button(p)
+        utils.fmt_modify_button(p)
         + " "
-        + utils.format_new_button(record="Appointment", ppt_id=p)
+        + utils.fmt_new_button(record="Appointment", ppt_id=p)
         + " "
-        + utils.format_new_button(record="Questionnaire", ppt_id=p)
+        + utils.fmt_new_button(record="Questionnaire", ppt_id=p)
         for p in df.index
     ]
 
@@ -74,19 +74,16 @@ def prepare_record_id(ppt: api.Participant, data_dict: dict) -> dict:
     age_created = (data["age_created_months"], data["age_created_days"])
     ts = datetime.strptime(data["date_created"], "%Y-%m-%d %H:%M:%S")
     age = api.get_age(age_created, ts)
-    data["age_now_months"] = str(age[0])
-    data["age_now_days"] = str(age[1])
+    data["age_now_months"], data["age_now_days"] = str(age[0]), str(age[1])
     data["parent1"] = data["parent1_name"] + " " + data["parent1_surname"]
     data["parent2"] = data["parent2_name"] + " " + data["parent2_surname"]
 
     classes = "table table-hover table-responsive"
 
     # prepare participants table
-    df_apt = utils.get_appointments_table(ppt, data_dict=data_dict)
-    df_apt["record_id"] = [utils.format_ppt_id(i) for i in df_apt.index]
-    df_apt["appointment_id"] = [
-        utils.format_apt_id(i) for i in df_apt["appointment_id"]
-    ]
+    df_apt = utils.get_apt_table(ppt, data_dict=data_dict)
+    df_apt["record_id"] = [utils.fmt_ppt_id(i) for i in df_apt.index]
+    df_apt["appointment_id"] = [utils.fmt_apt_id(i) for i in df_apt["appointment_id"]]
     df_apt = df_apt.sort_values(by="date", ascending=False)
     df_apt = df_apt[
         [
@@ -123,11 +120,11 @@ def prepare_record_id(ppt: api.Participant, data_dict: dict) -> dict:
     )
 
     # prepare language questionnaires table
-    df_que = utils.get_questionnaires_table(ppt, data_dict=data_dict)
+    df_que = utils.get_que_table(ppt, data_dict=data_dict)
     df_que["questionnaire_id"] = [
-        utils.format_que_id(q) for q in df_que["questionnaire_id"]
+        utils.fmt_que_id(q) for q in df_que["questionnaire_id"]
     ]
-    df_que["record_id"] = [utils.format_ppt_id(i) for i in df_que.index]
+    df_que["record_id"] = [utils.fmt_ppt_id(i) for i in df_que.index]
     df_que = df_que[
         [
             "questionnaire_id",
@@ -177,7 +174,7 @@ def prepare_record_id(ppt: api.Participant, data_dict: dict) -> dict:
     }
 
 
-def participants_routes(app):
+def ppt_routes(app):
     """Participants routes."""
 
     @app.route("/participants/")
@@ -187,7 +184,7 @@ def participants_routes(app):
         token = app.config["API_KEY"]
         records = app.config["RECORDS"]
         data_dict = api.get_data_dict(token=token)
-        data = prepare_participants(records, data_dict=data_dict)
+        data = prepare_ppt(records, data_dict=data_dict)
         if ppt_list is None:
             ppt_list = list(records.participants.to_df().index)
             ppt_list = [int(x) for x in ppt_list]

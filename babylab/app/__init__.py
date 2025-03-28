@@ -22,9 +22,9 @@ def create_app(env: str = "prod"):
     app.config["RECORDS"] = None
 
     # import routes
-    participants.participants_routes(app)
-    appointments.appointments_routes(app)
-    questionnaires.questionnaires_routes(app)
+    participants.ppt_routes(app)
+    appointments.apt_routes(app)
+    questionnaires.que_routes(app)
     general.general_routes(app)
 
     return app

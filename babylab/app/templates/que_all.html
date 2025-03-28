@@ -1,28 +1,27 @@
-{% extends "base.html" %}
+{% extends "_base.html" %}
 {% block content %}
-  <header>
-    <div class="jumbotron jumbotron-fluid">
-      <div class="container">
-        <h1 class="display-4">
-          Language questionnaires&nbsp;&nbsp;<i class="fa fa-file"></i>
-        </h1>
-        <p class="lead">There is a total of {{ n_que }} language questionnaires in the database.</p>
-      </div>
+<header>
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      <h1 class="display-4">
+        Language questionnaires&nbsp;&nbsp;<i class="fa fa-file"></i>
+      </h1>
+      <p class="lead">There is a total of {{ n_que }} language questionnaires in the database.</p>
     </div>
-    <hr class="my-4">
-  </header>
-  <body>
-    <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.2.1/b-3.2.1/fh-4.0.1/sp-2.3.3/sl-3.0.0/datatables.min.css"
-          rel="stylesheet">
-    <div class="div-center">
-      <div class="card-table">
-        <div width="10%">{{ data["table"]|safe }}</div>
-      </div>
+  </div>
+  <hr class="my-4">
+</header>
+
+<body>
+  <div class="div-center">
+    <div class="card-table">
+      <div width="10%">{{ data["table"]|safe }}</div>
     </div>
-    <script src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.2.1/b-3.2.1/fh-4.0.1/sp-2.3.3/sl-3.0.0/datatables.min.js"></script>
-    <script type="text/javascript"
-            src="{{ url_for('static', filename='js/tables.js') }}"></script>
-    <script>
+  </div>
+  <script
+    src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.2.2/b-3.2.1/fh-4.0.1/sp-2.3.3/sl-3.0.0/datatables.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/tables.js') }}"></script>
+  <script>
     let table = new dt("#quetable", searchCols = [3], hideCols = [12, 13], lookupCols = [1], queStatusCol = [3])
 
     table.on('click', 'td', function (e) {
@@ -35,6 +34,6 @@
         row.child(format_que(row.data())).show();
       }
     });
-    </script>
-  </body>
+  </script>
+</body>
 {% endblock content %}

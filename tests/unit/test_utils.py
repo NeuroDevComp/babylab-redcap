@@ -5,29 +5,28 @@ import pytest
 from babylab.src import utils
 
 
-def test_format_percentage():
-    """Test format_percentage."""
+def test_fmt_percentage():
+    """Test fmt_percentage."""
     with pytest.raises(ValueError):
-        utils.format_percentage(-0.1)
+        utils.fmt_percentage(-0.1)
     with pytest.raises(ValueError):
-        utils.format_percentage(111)
-    assert utils.format_percentage(0) == ""
-    assert utils.format_percentage(1) == "1"
-    assert utils.format_percentage(0.2) == "0"
-    assert utils.format_percentage(55) == "55"
-    assert utils.format_percentage(100) == "100"
+        utils.fmt_percentage(111)
+    assert utils.fmt_percentage(0) == ""
+    assert utils.fmt_percentage(1) == "1"
+    assert utils.fmt_percentage(0.2) == "0"
+    assert utils.fmt_percentage(55) == "55"
+    assert utils.fmt_percentage(100) == "100"
 
 
-def test_format_taxi_isbooked():
-    """Test format_taxi_isbooked."""
+def test_fmt_taxi_isbooked():
+    """Test fmt_taxi_isbooked."""
     with pytest.raises(ValueError):
-        utils.format_taxi_isbooked("Some address", "a")
+        utils.fmt_taxi_isbooked("Some address", "a")
     assert (
-        utils.format_taxi_isbooked("Some address", "1")
+        utils.fmt_taxi_isbooked("Some address", "1")
         == "<p style='color: green;'>Yes</p>"
     )
     assert (
-        utils.format_taxi_isbooked("Some address", "0")
-        == "<p style='color: red;'>No</p>"
+        utils.fmt_taxi_isbooked("Some address", "0") == "<p style='color: red;'>No</p>"
     )
-    assert utils.format_taxi_isbooked("", "0") == ""
+    assert utils.fmt_taxi_isbooked("", "0") == ""

@@ -12,8 +12,8 @@ def test_index_page():
         response = client.get("/")
         assert response.status_code == 200
         assert app.config["API_KEY"] == "BADTOKEN"
-        assert b"NeuroDevComp Babylab database" in response.data
-        assert b"You can find yor <b>API token</b> at REDCap." in response.data
+        assert b"babylab-redcap" in response.data
+        assert b"This app provides an interface to the" in response.data
 
 
 def test_index_page_token():
@@ -22,7 +22,7 @@ def test_index_page_token():
     with app.test_client() as client:
         response = client.post("/", data={"apiToken": conf.get_api_key()})
         assert response.status_code == 200
-        assert b"NeuroDevComp Babylab database" in response.data
+        assert b"babylab-redcap" in response.data
         assert b"Incorrect token" not in response.data
         assert isinstance(app.config["RECORDS"], api.Records)
 

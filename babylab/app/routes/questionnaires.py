@@ -7,7 +7,7 @@ from babylab.src import api, utils
 from babylab.app import config as conf
 
 
-def prepare_questionnaires(records: api.Records, data_dict: dict):
+def prepare_que(records: api.Records, data_dict: dict):
     """Prepare questionnaires page.
 
     Args:
@@ -17,13 +17,13 @@ def prepare_questionnaires(records: api.Records, data_dict: dict):
     Returns:
         dict: Parameters for the participants endpoint.
     """  # pylint: disable=line-too-long
-    df = utils.get_questionnaires_table(records, data_dict=data_dict)
+    df = utils.get_que_table(records, data_dict=data_dict)
     classes = "table table-hover"
     df["modify_button"] = [
-        utils.format_modify_button(que_id=q) for q in df["questionnaire_id"]
+        utils.fmt_modify_button(que_id=q) for q in df["questionnaire_id"]
     ]
-    df["questionnaire_id"] = [utils.format_que_id(q) for q in df["questionnaire_id"]]
-    df["record_id"] = [utils.format_ppt_id(i) for i in df.index]
+    df["questionnaire_id"] = [utils.fmt_que_id(q) for q in df["questionnaire_id"]]
+    df["record_id"] = [utils.fmt_ppt_id(i) for i in df.index]
     df = df[
         [
             "questionnaire_id",
@@ -71,7 +71,7 @@ def prepare_questionnaires(records: api.Records, data_dict: dict):
     return {"table": table}
 
 
-def questionnaires_routes(app):
+def que_routes(app):
     """Questionnaire routes."""
 
     @app.route("/questionnaires/")
@@ -80,7 +80,7 @@ def questionnaires_routes(app):
         """Participants database"""
         records = app.config["RECORDS"]
         data_dict = api.get_data_dict(token=app.config["API_KEY"])
-        data = prepare_questionnaires(records, data_dict=data_dict)
+        data = prepare_que(records, data_dict=data_dict)
         return render_template(
             "que_all.html",
             data=data,

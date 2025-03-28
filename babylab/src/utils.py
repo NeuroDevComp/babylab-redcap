@@ -3,14 +3,14 @@ Util functions for the app.
 """
 
 import os
-import datetime
 import shutil
+from datetime import datetime
 from copy import deepcopy
 from pandas import DataFrame
 from babylab.src import api
 
 
-def format_ppt_id(ppt_id: str) -> str:
+def fmt_ppt_id(ppt_id: str) -> str:
     """Format appointment ID.
 
     Args:
@@ -22,7 +22,7 @@ def format_ppt_id(ppt_id: str) -> str:
     return f"<a href=/participants/{ppt_id}>{ppt_id}</a>"
 
 
-def format_apt_id(apt_id: str) -> str:
+def fmt_apt_id(apt_id: str) -> str:
     """Format appointment ID.
 
     Args:
@@ -34,7 +34,7 @@ def format_apt_id(apt_id: str) -> str:
     return f"<a href=/appointments/{apt_id}>{apt_id}</a>"
 
 
-def format_que_id(que_id: str) -> str:
+def fmt_que_id(que_id: str) -> str:
     """Format questionnaire ID.
 
     Args:
@@ -47,19 +47,7 @@ def format_que_id(que_id: str) -> str:
     return f"<a href=/questionnaires/{que_id}>{que_id}</a>"
 
 
-def format_isestimated(isestimated: str) -> str:
-    """Format ``isestimated`` variable.
-
-    Args:
-        isestimated (str): Value of ``isestimated`` variable.
-
-    Returns:
-        str: Formatted ``isestimated`` value.
-    """
-    return "Estimated" if isestimated == "1" else "Calculated"
-
-
-def format_percentage(x: float | int) -> str:
+def fmt_percentage(x: float | int) -> str:
     """Format number into percentage.
 
     Args:
@@ -78,7 +66,7 @@ def format_percentage(x: float | int) -> str:
     return str(int(float(x))) if x else ""
 
 
-def format_taxi_isbooked(address: str, isbooked: str) -> str:
+def fmt_taxi_isbooked(address: str, isbooked: str) -> str:
     """Format ``taxi_isbooked`` variable to HTML.
 
     Args:
@@ -102,7 +90,7 @@ def format_taxi_isbooked(address: str, isbooked: str) -> str:
     return "<p style='color: red;'>No</p>"
 
 
-def format_new_button(record: str, ppt_id: str = None):
+def fmt_new_button(record: str, ppt_id: str = None):
     """Add new record button.
 
     Args:
@@ -124,7 +112,7 @@ def format_new_button(record: str, ppt_id: str = None):
     return f'<a href="/questionnaires/questionnaire_new?ppt_id={ppt_id}">{button_str}'
 
 
-def format_modify_button(ppt_id: str = None, apt_id: str = None, que_id: str = None):
+def fmt_modify_button(ppt_id: str = None, apt_id: str = None, que_id: str = None):
     """Add modify button.
 
     Args:
@@ -146,11 +134,7 @@ def format_modify_button(ppt_id: str = None, apt_id: str = None, que_id: str = N
     return f'<a href="/participants/{ppt_id}/participant_modify">{button_str}'
 
 
-def format_df(
-    x: DataFrame,
-    data_dict: dict,
-    prefixes: list[str] = None,
-) -> DataFrame:
+def fmt_df(x: DataFrame, data_dict: dict, prefixes: list[str] = None) -> DataFrame:
     """Reformat dataframe.
 
     Args:
@@ -163,24 +147,24 @@ def format_df(
     """
     if prefixes is None:
         prefixes = ["participant", "appointment", "language"]
-    for col_name, col_values in x.items():
-        kdict = [x + "_" + col_name for x in prefixes]
+    for col, val in x.items():
+        kdict = [x + "_" + col for x in prefixes]
         for k in kdict:
             if k in data_dict:
-                x[col_name] = [data_dict[k][v] if v else "" for v in col_values]
-        if "lang" in col_name:
-            x[col_name] = ["" if v == "None" else v for v in x[col_name]]
-        if "exp" in col_name:
-            x[col_name] = [format_percentage(v) for v in col_values]
-        if "taxi_isbooked" in col_name:
-            pairs = zip(x["taxi_address"], x[col_name])
-            x[col_name] = [format_taxi_isbooked(a, i) for a, i in pairs]
-        if "isestimated" in col_name:
-            x[col_name] = [format_isestimated(x) for x in x[col_name]]
+                x[col] = [data_dict[k][v] if v else "" for v in val]
+        if "lang" in col:
+            x[col] = ["" if v == "None" else v for v in x[col]]
+        if "exp" in col:
+            x[col] = [fmt_percentage(v) for v in val]
+        if "taxi_isbooked" in col:
+            pairs = zip(x["taxi_address"], x[col])
+            x[col] = [fmt_taxi_isbooked(a, i) for a, i in pairs]
+        if "isestimated" in col:
+            x[col] = ["Estimated" if x == "1" else "Calculated" for x in x[col]]
     return x
 
 
-def format_dict(x: dict, data_dict: dict) -> dict:
+def fmt_dict(x: dict, data_dict: dict) -> dict:
     """Reformat dictionary.
 
     Args:
@@ -194,14 +178,12 @@ def format_dict(x: dict, data_dict: dict) -> dict:
     y = dict(x)
     for k, v in y.items():
         for f in fields:
-            kdict = f + k
-            if kdict in data_dict and v:
-                y[k] = data_dict[kdict][v]
+            if f + k in data_dict and v:
+                y[k] = data_dict[f + k][v]
         if "exp" in k:
             y[k] = round(float(v), None) if v else ""
         if "taxi_isbooked" in k:
-            y[k] = format_taxi_isbooked(y["taxi_address"], y[k])
-
+            y[k] = fmt_taxi_isbooked(y["taxi_address"], y[k])
     return y
 
 
@@ -216,21 +198,21 @@ def replace_labels(x: DataFrame | dict, data_dict: dict) -> DataFrame:
         DataFrame: A Pandas DataFrame with replaced labels.
     """  # pylint: disable=line-too-long
     if isinstance(x, DataFrame):
-        return format_df(x, data_dict)
+        return fmt_df(x, data_dict)
     if isinstance(x, dict):
-        return format_dict(x, data_dict)
+        return fmt_dict(x, data_dict)
     return None
 
 
 def get_age_timestamp(
-    apt_records: dict, ppt_records: dict, timestamp: str = "date"
+    apt_records: dict, ppt_records: dict, dtype: str = "date"
 ) -> tuple[str, str]:
     """Get age at timestamp in months and days.
 
     Args:
         apt_records (dict): Appointment records.
         ppt_records (dict): Participant records.
-        timestamp (str, optional): Timestamp at which to calculate age. Defaults to "date".
+        date_type (str, optional): Timestamp at which to calculate age. Defaults to "date".
 
     Raises:
         ValueError: If tiemstamp is not "date" or "date_created".
@@ -238,22 +220,17 @@ def get_age_timestamp(
     Returns:
         tuple[str, str]: Age at timestamp in months and days.
     """
-    if timestamp not in ["date", "date_created"]:
+    if dtype not in ["date", "date_created"]:
         raise ValueError("timestamp must be 'date' or 'date_created'")
-    date_format = "%Y-%m-%d %H:%M" if timestamp == "date" else "%Y-%m-%d %H:%M:%S"
-    months_new = []
-    days_new = []
+    fmt_hms = "%Y-%m-%d %H:%M:%S"
+    fmt_hm = "%Y-%m-%d %H:%M"
+    fmt = fmt_hm if dtype == "date" else fmt_hms
+    months_new, days_new = [], []
     for v in apt_records.values():
-        if timestamp == "date_created":
-            ts = datetime.datetime.strptime(
-                ppt_records[v.record_id].data[timestamp],
-                date_format,
-            )
+        if dtype == "date_created":
+            ts = datetime.strptime(ppt_records[v.record_id].data[dtype], fmt)
         else:
-            ts = datetime.datetime.strptime(
-                v.data["date"],
-                "%Y-%m-%d %H:%M",
-            )
+            ts = datetime.strptime(v.data["date"], fmt_hm)
         months = ppt_records[v.record_id].data["age_now_months"]
         days = ppt_records[v.record_id].data["age_now_days"]
         age_now = api.get_age(age=(months, days), ts=ts)
@@ -262,7 +239,7 @@ def get_age_timestamp(
     return months_new, days_new
 
 
-def get_participants_table(records: api.Records, data_dict: dict) -> DataFrame:
+def get_ppt_table(records: api.Records, data_dict: dict) -> DataFrame:
     """Get participants table
 
     Args:
@@ -311,22 +288,19 @@ def get_participants_table(records: api.Records, data_dict: dict) -> DataFrame:
     new_age_months = []
     new_age_days = []
     for _, v in records.participants.records.items():
-        ts = datetime.datetime.strptime(v.data["date_created"], "%Y-%m-%d %H:%M:%S")
+        ts = datetime.strptime(v.data["date_created"], "%Y-%m-%d %H:%M:%S")
         age_created = (v.data["age_created_months"], v.data["age_created_days"])
         age = api.get_age(age_created, ts=ts)
         new_age_months.append(int(age[0]))
         new_age_days.append(int(age[1]))
 
     df = records.participants.to_df()
-    df["age_now_months"] = new_age_months
-    df["age_now_days"] = new_age_days
+    df["age_now_months"], df["age_now_days"] = new_age_months, new_age_days
     return replace_labels(df, data_dict)
 
 
-def get_appointments_table(
-    records: api.Records,
-    data_dict: dict = None,
-    study: str = None,
+def get_apt_table(
+    records: api.Records, data_dict: dict = None, study: str = None
 ) -> DataFrame:
     """Get appointments table.
 
@@ -339,7 +313,6 @@ def get_appointments_table(
         DataFrame: Table of appointments.
     """  # pylint: disable=line-too-long
     apts = deepcopy(records.appointments)
-
     if study:
         apts.records = {
             k: v for k, v in apts.records.items() if v.data["study"] == study
@@ -371,21 +344,17 @@ def get_appointments_table(
         api.make_id(i, apt_id)
         for i, apt_id in zip(df.index, df["redcap_repeat_instance"])
     ]
-
-    # get current age
-    age_now = get_age_timestamp(apt_records, ppt_records, "date_created")
-    df["age_now_months"] = age_now[0]
-    df["age_now_days"] = age_now[1]
-
-    # get age at appointment
-    age_apt = get_age_timestamp(apt_records, ppt_records, "date")
-    df["age_apt_months"] = age_apt[0]
-    df["age_apt_days"] = age_apt[1]
+    df["age_now_months"], df["age_now_days"] = get_age_timestamp(
+        apt_records, ppt_records, "date_created"
+    )
+    df["age_apt_months"], df["age_apt_days"] = get_age_timestamp(
+        apt_records, ppt_records, "date"
+    )
 
     return replace_labels(df, data_dict)
 
 
-def get_questionnaires_table(records: api.Records, data_dict: dict) -> DataFrame:
+def get_que_table(records: api.Records, data_dict: dict) -> DataFrame:
     """Get questionnaires table.
 
     Args:
@@ -449,9 +418,10 @@ def count_col(
     if values_sort:
         counts = dict(sorted(counts.items(), key=lambda item: item[1], reverse=True))
     if cumulative:
-        for idx, (k, v) in enumerate(counts.items()):
-            if idx > 0:
-                counts[k] = v + list(counts.values())[idx - 1]
+        cumsum = 0
+        for key in counts:
+            cumsum += counts[key]
+            counts[key] = cumsum
     return counts
 
 
@@ -463,28 +433,3 @@ def clean_tmp(path: str = "tmp"):
     """
     if os.path.exists(path):
         shutil.rmtree(path)
-
-
-def prepare_email(ppt_id: str, apt_id: str, data: dict, data_dict: dict) -> dict:
-    """Prepare email to send.
-
-    Args:
-        ppt_id (str): Participant ID.
-        apt_id (str): Appointment ID.
-        data (dict): Appointment data.
-
-    Returns:
-        dict: Email data.
-    """
-    timestamp = datetime.datetime.strptime(data["date"], "%Y-%m-%d %H:%M").isoformat()
-    email = {
-        "record_id": ppt_id,
-        "id": apt_id,
-        "status": data["status"],
-        "date": timestamp,
-        "study": data["study"],
-        "taxi_address": data["taxi_address"],
-        "taxi_isbooked": data["taxi_isbooked"],
-        "comments": data["comments"],
-    }
-    return replace_labels(email, data_dict)

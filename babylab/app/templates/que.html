@@ -1,99 +1,98 @@
-{% extends "base.html" %}
+{% extends "_base.html" %}
 {% block header %}
 {% endblock header %}
 {% block content %}
-  <header>
-    <div class="jumbotron jumbotron-fluid">
-      <div class="container">
-        <h1 class="display-4">
-          Language questionnaire {{ que_id }}&nbsp;&nbsp;<i class="fa fa-file"></i>
-        </h1>
-        <p class="lead">
-          Showing details about language questionnaire {{ que_id }}. To modify, hit the
-          "Modify
-          questionnaire"
-          button.
-        </p>
+<header>
+  <div class="jumbotron jumbotron-fluid">
+    <div class="container">
+      <h1 class="display-4">
+        Language questionnaire {{ que_id }}&nbsp;&nbsp;<i class="fa fa-file"></i>
+      </h1>
+      <p class="lead">
+        Showing details about language questionnaire {{ que_id }}. To modify, hit the
+        "Modify
+        questionnaire"
+        button.
+      </p>
+    </div>
+  </div>
+  <hr class="my-4">
+</header>
+
+<body>
+  <div class="div-center">
+    <div class="row">
+      <div class="col">
+        <div class="btn-group" role="group">
+          <a href="{{ url_for('ppt', ppt_id = ppt_id) }}">
+            <button type="button" class="btn btn-info">
+              <i class="fa fa-user"></i>&nbsp;&nbsp;See participant
+            </button>
+          </a>
+          <a href="{{ url_for('que_modify', ppt_id = ppt_id, que_id = que_id) }}">
+            <button type="button" class="btn btn-warning">
+              <i class="fa fa-pen"></i>&nbsp;&nbsp;Modify
+              questionnaire
+            </button>
+          </a>
+          <a>
+            <form method="post">
+              <input type="submit" name="deleteQuestionnaire" class="btn btn-danger"
+                value="×&nbsp;&nbsp;&nbsp;&nbsp;Delete questionnaire">
+            </form>
+          </a>
+        </div>
       </div>
     </div>
-    <hr class="my-4">
-  </header>
-  <body>
+  </div>
+  <br>
+  <div class="row col-12">
     <div class="div-center">
-      <div class="row">
-        <div class="col">
-          <div class="btn-group" role="group">
-            <a href="{{ url_for('ppt', ppt_id = ppt_id) }}">
-              <button type="button" class="btn btn-info">
-                <i class="fa fa-user"></i>&nbsp;&nbsp;See participant
-              </button>
-            </a>
-            <a href="{{ url_for('que_modify', ppt_id = ppt_id, que_id = que_id) }}">
-              <button type="button" class="btn btn-warning">
-                <i class="fa fa-pen"></i>&nbsp;&nbsp;Modify
-                questionnaire
-              </button>
-            </a>
-            <a>
-              <form method="post">
-                <input type="submit"
-                       name="deleteQuestionnaire"
-                       class="btn btn-danger"
-                       value="×&nbsp;&nbsp;&nbsp;&nbsp;Delete questionnaire">
-              </form>
-            </a>
-          </div>
+      <div class="card card-info">
+        <div class="card-header ">
+          Linguistic information
+          <br>
+          {{ data["isestimated"] | safe }}
+        </div>
+        <div class="card-body">
+          <table class="table table-hover table-responsive">
+            <thead>
+              <tr>
+                <th scope="col"></th>
+                <th scope="col">Language</th>
+                <th scope="col">Exposure (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">1</th>
+                <td>{{ data["lang1"] }}</td>
+                <td>{{ data["lang1_exp"] }}</td>
+              </tr>
+              <tr>
+                <th scope="row">2</th>
+                <td>{{ data["lang2"] }}</td>
+                <td>{{ data["lang2_exp"] }}</td>
+              </tr>
+              <tr>
+                <th scope="row">3</th>
+                <td>{{ data["lang3"] }}</td>
+                <td>{{ data["lang3_exp"] }}</td>
+              </tr>
+              <tr>
+                <th scope="row">4</th>
+                <td>{{ data["lang4"] }}</td>
+                <td>{{ data["lang4_exp"] }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card-footer">
+          Created on the {{ data["date_created"] }}, last updated on the {{
+          data["date_updated"] }}.
         </div>
       </div>
     </div>
-    <br>
-    <div class="row col-12">
-      <div class="div-center">
-        <div class="card card-info">
-          <div class="card-header ">
-            Linguistic information
-            <br>
-            {{ data["isestimated"] | safe }}
-          </div>
-          <div class="card-body">
-            <table class="table table-hover table-responsive">
-              <thead>
-                <tr>
-                  <th scope="col"></th>
-                  <th scope="col">Language</th>
-                  <th scope="col">Exposure (%)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">1</th>
-                  <td>{{ data["lang1"] }}</td>
-                  <td>{{ data["lang1_exp"] }}</td>
-                </tr>
-                <tr>
-                  <th scope="row">2</th>
-                  <td>{{ data["lang2"] }}</td>
-                  <td>{{ data["lang2_exp"] }}</td>
-                </tr>
-                <tr>
-                  <th scope="row">3</th>
-                  <td>{{ data["lang3"] }}</td>
-                  <td>{{ data["lang3_exp"] }}</td>
-                </tr>
-                <tr>
-                  <th scope="row">4</th>
-                  <td>{{ data["lang4"] }}</td>
-                  <td>{{ data["lang4_exp"] }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="card-footer">
-            Created on the {{ data["date_created"] }}, last updated on the {{
-            data["date_updated"] }}.
-          </div>
-        </div>
-      </div>
-    </div>
-  </body>
+  </div>
+</body>
 {% endblock content %}

@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+{% extends "_base.html" %}
 
 {% block content %}
 
@@ -7,9 +7,25 @@
     <div class="card card-index" id="indexCardMain">
       <div class="card-header" id="indexCardHeader">Welcome!</div>
       <div class="card-body" id="indexCardBody">
-        This is the <b>NeuroDevComp Babylab database</b>. It provides an interface with the <b>REDCap database</b> to
-        consult participant and appointment information conveniently. This is a work in progress, feel free to
-        report issues and provide feed-back (<a href=" mailto:gonzalo.garcia@sjd.es">gonzalo.garcia@sjd.es</a>).
+        <div class="jumbotron jumbotron-fluid">
+          <h3 class="display-4">babylab-redcap</h3>
+          <img alt="GitHub Actions Workflow Status"
+            src="https://img.shields.io/github/actions/workflow/status/NeuroDevComp/babylab-redcap/pytest.yml">
+          <img alt="GitHub Issues or Pull Requests"
+            src="https://img.shields.io/github/issues-pr/NeuroDevComp/babylab-redcap">
+          <img alt="PyPI - Status" src="https://img.shields.io/pypi/status/babylab">
+          <img alt="PyPI - Version" src="https://img.shields.io/pypi/v/babylab">
+          <img alt="GitHub Release" src="https://img.shields.io/github/v/tag/NeuroDevComp/babylab-redcap">
+          <img alt="GitHub Release" src="https://img.shields.io/github/v/release/NeuroDevComp/babylab-redcap">
+        </div>
+        <br>
+        <hr>
+        <br>
+        <p>
+          This app provides an interface to the <b>REDCap database</b> to
+          consult participant and appointment information conveniently. This is a work in progress, feel free to
+          report issues and provide feed-back (<a href=" mailto:gonzalo.garcia@sjd.es">gonzalo.garcia@sjd.es</a>).
+        </p>
         <img src="{{ url_for('static', filename='img/ndc-logo.svg') }}" id="img-ndc-logo" width="--" height="--"
           alt="NDC logo">
       </div>
@@ -30,7 +46,7 @@
           <button type="submit" class="btn btn-primary" onclick="spinner()">Submit</button>
         </form>
       </div>
-      <div class="card-footer">You can find yor <b>API token</b> at REDCap.</div>
+      <div class="card-footer">You can find your <b>API token</b> at REDCap.</div>
     </div>
     <div class="loading">
       <div class="loader">
@@ -41,6 +57,16 @@
         document.getElementsByClassName("loading")[0].style.display = "block";
       }
     </script>
+    {% endif %}
+    {% if redcap_version %}
+    <div class="card card-index" id="indexCardLogin">
+      <h4 class="card-header">Log in</h4>
+      <div class="card-body">
+        <h5>Welcome!</h5>
+        You have successfully logged in.
+      </div>
+      <div class="card-footer">You can find your <b>API token</b> at REDCap.</div>
+    </div>
     {% endif %}
 </body>
 {% endblock content %}

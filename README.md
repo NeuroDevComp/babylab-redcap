@@ -5,8 +5,9 @@
 ![PyPI - License](https://img.shields.io/pypi/l/babylab)
 ![PyPI - Status](https://img.shields.io/pypi/status/babylab)
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/babylab)
-![GitHub Tag](https://img.shields.io/github/v/tag/NeuroDevComp/babylab-redcap)
 ![PyPI - Version](https://img.shields.io/pypi/v/babylab)
+![GitHub Tag](https://img.shields.io/github/v/tag/NeuroDevComp/babylab-redcap)
+![GitHub Release](https://img.shields.io/github/v/release/NeuroDevComp/babylab-redcap)
 
 ---
 

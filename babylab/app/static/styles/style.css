@@ -346,6 +346,82 @@ dt-search {
     text-align: center;
 }
 
+.main-footer {
+    text-align: center;
+    margin-top: 0.1 * 2;
+    &.collapsed {
+      margin-top: 0;
+    }
+    &--1 {
+      color: #fff;
+      background-color: #313131;
+      padding: 0.1 * 2 0;
+      a:not(.btn) {
+        color: #fff;
+      }
+      .column > * {
+        margin-bottom: 0.1 * 1.5;
+      }
+    }
+    &--2 {
+      padding: 0.1 * 2 0;
+      a {
+        color: #000;
+      }
+      .cerca {
+        text-align: left;
+        h3 {
+          text-transform: uppercase;
+          text-align: left;
+          font-size: rem-calc(16);
+        }
+        .inline-list--logos {
+          margin-left: 0;
+          li {
+            margin-left: 0;
+          }
+        }
+      }
+    }
+    a:not(.btn) {
+      text-decoration: none;
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+    ul,
+    p {
+      font-size: rem-calc(14);
+    }
+}
+
+address {
+    font-style: normal;
+    font-size: rem-calc(14);
+    p {
+      margin-bottom: 0;
+    }
+}
+
+.social li {
+    margin-bottom: 0;
+    &:last-child {
+      margin-bottom: 0;
+    }
+}
+  
+.legal {
+    li {
+      font-size: rem-calc(14);
+    }
+}
+  
+.inline-list--logos li:first-child {
+    position: relative;
+    top: -4px;
+}
+
+
 
 a.more-link {
     background-color: lightgray;

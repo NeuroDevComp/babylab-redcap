@@ -7,9 +7,7 @@ from babylab.src import api, utils
 from babylab.app import config as conf
 
 
-def prepare_appointments(
-    records: api.Records, data_dict: dict = None, study: str = None
-):
+def prepare_apt(records: api.Records, data_dict: dict = None, study: str = None):
     """Prepare record ID page.
 
     Args:
@@ -20,13 +18,13 @@ def prepare_appointments(
     Returns:
         dict: Parameters for the participants endpoint.
     """  # pylint: disable=line-too-long
-    df = utils.get_appointments_table(records, data_dict=data_dict, study=study)
+    df = utils.get_apt_table(records, data_dict=data_dict, study=study)
     classes = "table table-hover table-responsive"
-    df["record_id"] = [utils.format_ppt_id(i) for i in df.index]
+    df["record_id"] = [utils.fmt_ppt_id(i) for i in df.index]
     df["modify_button"] = [
-        utils.format_modify_button(p, a) for p, a in zip(df.index, df["appointment_id"])
+        utils.fmt_modify_button(p, a) for p, a in zip(df.index, df["appointment_id"])
     ]
-    df["appointment_id"] = [utils.format_apt_id(i) for i in df["appointment_id"]]
+    df["appointment_id"] = [utils.fmt_apt_id(i) for i in df["appointment_id"]]
 
     df = df[
         [
@@ -72,7 +70,7 @@ def prepare_appointments(
     return {"table": table}
 
 
-def appointments_routes(app):
+def apt_routes(app):
     """Appointments routes."""
 
     @app.route("/appointments/")
@@ -82,7 +80,7 @@ def appointments_routes(app):
         token = app.config["API_KEY"]
         records = app.config["RECORDS"]
         data_dict = api.get_data_dict(token=token)
-        data = prepare_appointments(records, data_dict=data_dict)
+        data = prepare_apt(records, data_dict=data_dict)
         return render_template(
             "apt_all.html",
             data=data,

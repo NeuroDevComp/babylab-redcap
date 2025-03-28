@@ -1,9 +1,7 @@
-{% extends "base.html" %}
+{% extends "_base.html" %}
 {% block content %}
 
 <body>
-  <link href="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.2.1/b-3.2.1/fh-4.0.1/sp-2.3.3/sl-3.0.0/datatables.min.css"
-    rel="stylesheet">
   <div class="jumbotron jumbotron-fluid">
     <h1 class="display-4">Studies&nbsp;&nbsp;<i class="fa fa-flask"></i></h1>
     <p class="lead">Select a study to see details.</p>
@@ -25,7 +23,73 @@
       </div>
     </form>
   </div>
+  <br>
   {% if selected_study %}
+  <div class="container col-12">
+    <div class="jumbotron jumbotron-fluid">
+      <div class="container">
+        <h3 class="display-4">{{ data_dict["appointment_study"][selected_study] }}</h3>
+        <p class="lead">Showing study details.</p>
+      </div>
+    </div>
+    <hr class="my-4">
+    <br>
+    <div class="row">
+      <div class="col">
+        <div class="card text-bg-success">
+          <div class="card-header">Appointments</div>
+          <div class="card-body">
+            <div class="card-text">
+              <h1>
+                {{ data["n_apts"] }}&nbsp;&nbsp;<i class="fa-solid fa-calendar"></i>
+              </h1>
+            </div>
+          </div>
+          <div class="card-footer text-bg-success">In total</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card text-bg-warning">
+          <div class="card-header">Appointments</div>
+          <div class="card-body">
+            <div class="card-text">
+              <h1>
+                {{ data["n_apts_week"][selected_study] }}&nbsp;&nbsp;<i class="fa-solid fa-calendar"></i>
+              </h1>
+            </div>
+          </div>
+          <div class="card-footer text-bg-warning">This week</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card text-bg-primary">
+          <div class="card-header">Successful appointments</div>
+          <div class="card-body">
+            <div class="card-text">
+              <h1>
+                {{ data["n_apts_week_succ"][selected_study] }}&nbsp;&nbsp;<i class="fa-solid fa-calendar"></i>
+              </h1>
+            </div>
+          </div>
+          <div class="card-footer text-bg-primary">This week</div>
+        </div>
+      </div>
+      <div class="col">
+        <div class="card text-bg-danger">
+          <div class="card-header">Cancelled appointments</div>
+          <div class="card-body">
+            <div class="card-text">
+              <h1>
+                {{ data["n_apts_week_canc"][selected_study] }}&nbsp;&nbsp;<i class="fa-solid fa-calendar"></i>
+              </h1>
+            </div>
+          </div>
+          <div class="card-footer text-bg-danger">This week</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <br>
   <div class="div-center">
     <div class="card card-plot">
       <div class="card-title">Appointments</div>
@@ -58,12 +122,12 @@
     </div>
   </div>
   {% endif %}
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
   <script
-    src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.2.1/b-3.2.1/fh-4.0.1/sp-2.3.3/sl-3.0.0/datatables.min.js"></script>
-  <script type="text/javascript" src="{{ url_for('static', filename='js/tables.js') }}"></script>
+    src="https://cdn.datatables.net/v/bs5/jq-3.7.0/dt-2.2.2/b-3.2.1/fh-4.0.1/sp-2.3.3/sl-3.0.0/datatables.min.js"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename='js/tables.js') }}">
+  </script>
   <script>
-    let table = new dt("#apttable", searchCols = [3, 4], hideCols = [2, 6, 7, 8, 9, 10], statusCol = 4)
+    let table = new dt("#apttable", searchCols = [3, 4], hideCols = [6, 7, 8, 10], statusCol = 4)
 
     table.on('click', 'td', function (e) {
       let tr = e.target.closest('tr');
